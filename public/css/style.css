@@ -1,0 +1,1063 @@
+/* =============================================================
+   ESTILO GLOBAL DO SISTEMA
+   Base: AdminLTE 4 + Bootstrap 5.3
+
+   COMO FUNCIONA O TEMA
+   Os componentes NUNCA usam cores fixas: usam as variáveis da
+   seção 01. Para trocar o tema basta mudar o atributo no <html>:
+       <html data-bs-theme="light">   ou   <html data-bs-theme="dark">
+   Para ajustar uma cor de um tema, edite só a seção 01.
+
+   ÍNDICE
+   01. Temas e variáveis (claro / escuro)
+   02. Base
+   03. Formulários
+   04. Botões
+   05. Barra superior (header)
+   06. Menu lateral (sidebar)
+   07. Área de conteúdo e breadcrumb
+   08. Cards
+   09. Tabelas (inclui ordenação por coluna e rodapé com paginação)
+   10. Botões de ação (ícones redondos)
+   11. Paginação, dropdowns e modais
+   12. Toasts
+   13. Loading global
+   14. Rodapé
+   15. Tela de login
+   16. Responsividade
+============================================================= */
+
+
+/* =============================================================
+   01. TEMAS E VARIÁVEIS
+============================================================= */
+
+/* Cores que NÃO mudam com o tema (identidade do sistema) */
+:root {
+    --laranja: #f47b3c;
+    --laranja-claro: #f78d55;
+    --laranja-escuro: #e0662a;
+
+    --grafite: #36373a;
+    --grafite-escuro: #2b2c2e;
+    --grafite-linha: #2a2b2d;
+    --texto-sidebar: #e6e6e6;
+
+    --cor-sucesso: #42b883;
+    --cor-erro: #dc3545;
+
+    --sidebar-width: 250px;
+    --lte-sidebar-width: var(--sidebar-width);
+    --raio: 6px;
+}
+
+/* ---------- TEMA CLARO (padrão) ---------- */
+:root,
+[data-bs-theme="light"] {
+    color-scheme: light;
+
+    --fundo: #f4f4f4;
+    --superficie: #ffffff;
+    --superficie-2: #f8f8f8;
+    --borda: #e4e4e4;
+
+    --texto: #333333;
+    --texto-suave: #777777;
+    --link: #e0662a;
+    --link-hover: #f47b3c;
+
+    --input-bg: #ffffff;
+    --input-borda: #d6d6d6;
+    --input-desabilitado: #efefef;
+
+    --tabela-cabecalho: #2b2c2e;
+    --tabela-linha: #ececec;
+    --tabela-hover: #faf6f3;
+    --tabela-zebra: #fbfbfb;
+
+    --btn-cinza: #6c757d;
+    --btn-cinza-hover: #5a6268;
+    --acao-borda: #e4e4e4;
+
+    --sombra: rgba(0, 0, 0, .10);
+    --sombra-forte: rgba(0, 0, 0, .25);
+    --overlay: rgba(255, 255, 255, .75);
+}
+
+/* ---------- TEMA ESCURO ---------- */
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+
+    --fundo: #1e1d1c;
+    --superficie: #292826;
+    --superficie-2: #32302e;
+    --borda: #3c3a38;
+
+    --texto: #e6e2dd;
+    --texto-suave: #a39e98;
+    --link: #ff9a3c;
+    --link-hover: #ffb066;
+
+    --input-bg: #1e1d1c;
+    --input-borda: #4a4744;
+    --input-desabilitado: #262524;
+
+    --tabela-cabecalho: #1a1918;
+    --tabela-linha: #34322f;
+    --tabela-hover: rgba(244, 123, 60, .08);
+    --tabela-zebra: #2d2b29;
+
+    --btn-cinza: #4d4a47;
+    --btn-cinza-hover: #5e5a57;
+    --acao-borda: #4a4744;
+
+    --sombra: rgba(0, 0, 0, .45);
+    --sombra-forte: rgba(0, 0, 0, .6);
+    --overlay: rgba(0, 0, 0, .65);
+}
+
+/* Liga o Bootstrap às nossas variáveis: tudo que usa --bs-* (modal,
+   dropdown, text-muted, bg-body...) passa a seguir o tema também */
+:root,
+[data-bs-theme="light"],
+[data-bs-theme="dark"] {
+    --bs-primary: #f47b3c;
+    --bs-primary-rgb: 244, 123, 60;
+
+    --bs-body-bg: var(--fundo);
+    --bs-body-color: var(--texto);
+    --bs-emphasis-color: var(--texto);
+    --bs-secondary-color: var(--texto-suave);
+    --bs-secondary-bg: var(--superficie-2);
+    --bs-tertiary-bg: var(--superficie-2);
+    --bs-border-color: var(--borda);
+}
+
+
+/* =============================================================
+   02. BASE
+============================================================= */
+
+html,
+body {
+    min-height: 100vh;
+}
+
+body {
+    font-family: 'Open Sans', 'Segoe UI', system-ui, -apple-system,
+        'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+a {
+    color: var(--link);
+    transition: color .2s ease;
+}
+
+a:hover {
+    color: var(--link-hover);
+}
+
+
+/* =============================================================
+   03. FORMULÁRIOS
+============================================================= */
+
+.form-label {
+    color: var(--texto);
+    font-weight: 600;
+}
+
+.form-control,
+.form-select {
+    background-color: var(--input-bg);
+    color: var(--texto);
+    border: 1px solid var(--input-borda);
+    border-radius: var(--raio);
+}
+
+.form-control::placeholder {
+    color: var(--texto-suave);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--input-bg);
+    color: var(--texto);
+    border-color: var(--laranja);
+    box-shadow: 0 0 0 .2rem rgba(244, 123, 60, .18);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--input-desabilitado);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--cor-erro);
+    background-image: none;
+    box-shadow: none;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: #ff6675;
+    box-shadow: 0 0 0 .2rem rgba(220, 53, 69, .15);
+}
+
+.form-check-input {
+    background-color: var(--input-bg);
+    border-color: var(--input-borda);
+}
+
+.form-check-input:checked {
+    background-color: var(--laranja);
+    border-color: var(--laranja);
+}
+
+.form-check-input:focus {
+    border-color: var(--laranja);
+    box-shadow: 0 0 0 .2rem rgba(244, 123, 60, .18);
+}
+
+.form-control:-webkit-autofill {
+    -webkit-text-fill-color: var(--texto);
+    -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset;
+    caret-color: var(--texto);
+}
+
+
+/* =============================================================
+   04. BOTÕES
+============================================================= */
+
+/* Principal: laranja sólido */
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--laranja);
+    --bs-btn-border-color: var(--laranja);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--laranja-escuro);
+    --bs-btn-hover-border-color: var(--laranja-escuro);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--laranja-escuro);
+    --bs-btn-active-border-color: var(--laranja-escuro);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--laranja);
+    --bs-btn-disabled-border-color: var(--laranja);
+    --bs-btn-focus-shadow-rgb: 244, 123, 60;
+}
+
+/* Secundário (ex.: Cancelar) */
+.btn-secondary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--btn-cinza);
+    --bs-btn-border-color: var(--btn-cinza);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--btn-cinza-hover);
+    --bs-btn-hover-border-color: var(--btn-cinza-hover);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--btn-cinza-hover);
+    --bs-btn-active-border-color: var(--btn-cinza-hover);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--btn-cinza);
+    --bs-btn-disabled-border-color: var(--btn-cinza);
+    --bs-btn-focus-shadow-rgb: 108, 117, 125;
+}
+
+/* Escuro: ideal para "Novo" na barra de breadcrumb */
+.btn-dark {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--grafite-escuro);
+    --bs-btn-border-color: var(--grafite-escuro);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #000;
+    --bs-btn-hover-border-color: #000;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #000;
+    --bs-btn-active-border-color: #000;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--grafite-escuro);
+    --bs-btn-disabled-border-color: var(--grafite-escuro);
+    --bs-btn-focus-shadow-rgb: 43, 44, 46;
+}
+
+.btn {
+    border-radius: var(--raio);
+}
+
+.btn:disabled,
+.btn.disabled {
+    opacity: .7;
+}
+
+
+/* =============================================================
+   05. BARRA SUPERIOR (HEADER)
+   Laranja nos dois temas
+============================================================= */
+
+.app-header.navbar {
+    background: var(--laranja) !important;
+    border-bottom: 0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
+}
+
+.app-header .nav-link,
+.app-header .navbar-brand {
+    color: #fff;
+}
+
+.app-header .nav-link:hover,
+.app-header .nav-link:focus {
+    color: rgba(255, 255, 255, .75);
+}
+
+.app-header button.nav-link {
+    cursor: pointer;
+}
+
+/* Botão de tema: mostra a lua no tema claro e o sol no tema escuro */
+html[data-bs-theme="dark"] .icone-tema-claro,
+html:not([data-bs-theme="dark"]) .icone-tema-escuro {
+    display: none;
+}
+
+/* Menu do usuário (dropdown da navbar) */
+.app-header .dropdown-menu {
+    min-width: 11rem;
+    margin-top: .5rem;
+    box-shadow: 0 8px 24px var(--sombra-forte);
+}
+
+.app-header .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .55rem 1rem;
+}
+
+.app-header .dropdown-item i {
+    width: 1.1rem;
+    text-align: center;
+    color: var(--laranja);
+}
+
+.app-header .dropdown-item:hover,
+.app-header .dropdown-item:focus {
+    color: var(--texto);
+}
+
+/* Título da página centralizado na navbar.
+   Os dois lados têm a mesma largura (flex: 1 1 0), então o título
+   fica no centro de verdade e nunca encosta no nome do usuário */
+.app-header .navbar-lado {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.app-header .navbar-lado-direito {
+    justify-content: flex-end;
+}
+
+.app-header .navbar-titulo {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0 .75rem;
+    overflow: hidden;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =============================================================
+   06. MENU LATERAL (SIDEBAR)
+   Grafite nos dois temas
+============================================================= */
+
+.app-sidebar {
+    --lte-sidebar-color: var(--texto-sidebar);
+    --lte-sidebar-hover-color: #fff;
+    --lte-sidebar-hover-bg: rgba(255, 255, 255, .06);
+    --lte-sidebar-menu-active-bg: var(--laranja);
+    --lte-sidebar-menu-active-color: #fff;
+
+    background: var(--grafite) !important;
+    border-right: 0;
+    box-shadow: none;
+}
+
+/* Logo: continua a faixa laranja do header */
+.app-sidebar .sidebar-brand {
+    background: var(--laranja);
+    border-bottom: 0;
+}
+
+.app-sidebar .brand-link,
+.app-sidebar .brand-text {
+    color: #fff;
+}
+
+.app-sidebar .sidebar-wrapper {
+    padding: 0;
+}
+
+.app-sidebar .sidebar-menu {
+    padding: 0;
+}
+
+.app-sidebar .sidebar-menu > .nav-item {
+    margin: 0;
+}
+
+/* Item de menu: linha divisória fina entre os itens */
+.app-sidebar .sidebar-menu .nav-link {
+    padding: .85rem 1.25rem;
+    border-radius: 0;
+    border-bottom: 1px solid var(--grafite-linha);
+    color: var(--texto-sidebar);
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.app-sidebar .sidebar-menu .nav-link .nav-icon {
+    color: var(--texto-sidebar);
+}
+
+.app-sidebar .sidebar-menu .nav-link:hover {
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+}
+
+/* Item ativo: faixa laranja inteira */
+.app-sidebar .sidebar-menu .nav-link.active {
+    background: var(--laranja) !important;
+    color: #fff !important;
+}
+
+.app-sidebar .sidebar-menu .nav-link.active .nav-icon {
+    color: #fff;
+}
+
+/* Submenus */
+.app-sidebar .nav-treeview {
+    background: var(--grafite-escuro);
+}
+
+.app-sidebar .nav-treeview .nav-link {
+    padding-left: 2.5rem;
+}
+
+
+/* =============================================================
+   07. ÁREA DE CONTEÚDO E BREADCRUMB
+============================================================= */
+
+.app-main {
+    background: var(--fundo);
+}
+
+.app-content {
+    padding-top: 1.25rem;
+}
+
+/* Faixa com breadcrumb à esquerda e ação (ex.: Novo) à direita */
+.app-content-header {
+    padding: .9rem 1.25rem;
+    background: var(--superficie);
+    border-bottom: 1px solid var(--borda);
+}
+
+.app-content-header h1,
+.app-content-header h2,
+.app-content-header h3,
+.app-content-header h4 {
+    margin: 0;
+    color: var(--link);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.app-content-header .breadcrumb {
+    margin: 0;
+    font-size: 14px;
+}
+
+.app-content-header .breadcrumb a {
+    color: var(--link) !important;
+    text-decoration: underline;
+}
+
+.app-content-header .breadcrumb a:hover {
+    color: var(--link-hover);
+}
+
+.app-content-header .breadcrumb-item.active {
+    color: var(--texto);
+}
+
+/* Separador "»" no lugar da barra padrão */
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "»";
+    color: var(--texto);
+}
+
+
+/* =============================================================
+   08. CARDS
+============================================================= */
+
+.card {
+    background: var(--superficie);
+    color: var(--texto);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    box-shadow: 0 1px 3px var(--sombra);
+}
+
+.card-header,
+.card-footer {
+    background: var(--superficie);
+    border-color: var(--borda);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+
+/* =============================================================
+   09. TABELAS
+============================================================= */
+
+.table {
+    --bs-table-color: var(--texto);
+    --bs-table-bg: var(--superficie);
+    --bs-table-border-color: var(--tabela-linha);
+    --bs-table-hover-color: var(--texto);
+    --bs-table-hover-bg: var(--tabela-hover);
+    --bs-table-striped-bg: var(--tabela-zebra);
+    --bs-table-striped-color: var(--texto);
+
+    color: var(--texto);
+    margin-bottom: 0;
+}
+
+.table > :not(caption) > * > * {
+    padding: .75rem 1rem;
+    vertical-align: middle;
+}
+
+/* Cabeçalho escuro com títulos em maiúsculas */
+.table > thead {
+    --bs-table-bg: var(--tabela-cabecalho);
+    --bs-table-color: #fff;
+}
+
+.table thead th {
+    background: var(--tabela-cabecalho);
+    color: #fff;
+    border: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.table a:not(.btn) {
+    color: var(--texto);
+    text-decoration: underline;
+}
+
+.table a:not(.btn):hover {
+    color: var(--link-hover);
+}
+
+/* Tabela dentro de card: cantos arredondados.
+   Usa clip-path (e não overflow:hidden) para a rolagem horizontal
+   da .table-responsive continuar funcionando no celular */
+.card > .table-responsive,
+.card > .table {
+    clip-path: inset(0 round var(--raio) var(--raio) 0 0);
+}
+
+.card > .table-responsive:last-child,
+.card > .table:last-child {
+    clip-path: inset(0 round var(--raio));
+}
+
+/* ----- Colunas ordenáveis -----
+   Uso: <th class="ordenavel" data-coluna="NOME_COLUNA" tabindex="0">Título</th>
+   A tela troca as classes ordenado-asc / ordenado-desc ao ordenar */
+.table thead th.ordenavel {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: box-shadow .2s ease;
+}
+
+.table thead th.ordenavel:hover {
+    box-shadow: inset 0 0 0 999px rgba(255, 255, 255, .07);
+}
+
+.table thead th.ordenavel:focus-visible {
+    outline: 2px solid var(--laranja-claro);
+    outline-offset: -2px;
+}
+
+.table thead th.ordenavel::after {
+    content: "\f0dc";
+    margin-left: .5rem;
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free";
+    font-size: 10px;
+    font-weight: 900;
+    opacity: .35;
+}
+
+.table thead th.ordenado-asc::after {
+    content: "\f0de";
+    color: var(--laranja-claro);
+    opacity: 1;
+}
+
+.table thead th.ordenado-desc::after {
+    content: "\f0dd";
+    color: var(--laranja-claro);
+    opacity: 1;
+}
+
+/* ----- Rodapé da tabela -----
+   Esquerda: contagem | Centro: paginação | Direita: registros por página
+   Uso: <div class="card-footer tabela-rodape"> com .tabela-info,
+        .tabela-paginacao e .tabela-por-pagina */
+.tabela-rodape {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: .75rem 1rem;
+    padding: .75rem 1rem;
+    color: var(--texto-suave);
+    font-size: 13px;
+}
+
+.tabela-rodape .tabela-info {
+    justify-self: start;
+}
+
+.tabela-rodape .tabela-paginacao {
+    justify-self: center;
+}
+
+.tabela-rodape .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0;
+}
+
+.tabela-rodape .tabela-por-pagina {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    justify-self: end;
+    white-space: nowrap;
+}
+
+.tabela-rodape .tabela-por-pagina .form-select {
+    width: auto;
+}
+
+
+/* =============================================================
+   10. BOTÕES DE AÇÃO (ÍCONES REDONDOS)
+   Uso: <button class="btn btn-acao"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-acao btn-acao-excluir"><i class="fa-solid fa-trash"></i></button>
+============================================================= */
+
+.btn-acao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--acao-borda);
+    border-radius: 50%;
+    background: var(--superficie);
+    color: var(--texto);
+    box-shadow: 0 1px 3px var(--sombra);
+    transition: background-color .2s ease, color .2s ease,
+        border-color .2s ease;
+}
+
+.btn-acao:hover,
+.btn-acao:focus-visible {
+    background: var(--grafite);
+    border-color: var(--grafite);
+    color: #fff;
+}
+
+.btn-acao-excluir {
+    color: var(--laranja);
+}
+
+.btn-acao-excluir:hover,
+.btn-acao-excluir:focus-visible {
+    background: var(--laranja);
+    border-color: var(--laranja);
+    color: #fff;
+}
+
+
+/* =============================================================
+   11. PAGINAÇÃO, DROPDOWNS E MODAIS
+============================================================= */
+
+/* Paginação */
+.pagination {
+    --bs-pagination-color: var(--texto);
+    --bs-pagination-bg: var(--superficie);
+    --bs-pagination-border-color: var(--borda);
+    --bs-pagination-hover-color: var(--link-hover);
+    --bs-pagination-hover-bg: var(--tabela-hover);
+    --bs-pagination-hover-border-color: var(--borda);
+    --bs-pagination-focus-color: var(--link-hover);
+    --bs-pagination-focus-bg: var(--tabela-hover);
+    --bs-pagination-active-color: #fff;
+    --bs-pagination-active-bg: var(--laranja);
+    --bs-pagination-active-border-color: var(--laranja);
+    --bs-pagination-disabled-color: var(--texto-suave);
+    --bs-pagination-disabled-bg: var(--superficie-2);
+    --bs-pagination-disabled-border-color: var(--borda);
+    --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(244, 123, 60, .18);
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    --bs-dropdown-bg: var(--superficie);
+    --bs-dropdown-color: var(--texto);
+    --bs-dropdown-border-color: var(--borda);
+    --bs-dropdown-link-color: var(--texto);
+    --bs-dropdown-link-hover-color: var(--texto);
+    --bs-dropdown-link-hover-bg: var(--tabela-hover);
+    --bs-dropdown-link-active-color: #fff;
+    --bs-dropdown-link-active-bg: var(--laranja);
+    --bs-dropdown-divider-bg: var(--borda);
+}
+
+/* Modais: cabeçalho escuro nos dois temas, corpo segue o tema */
+.modal {
+    --bs-modal-bg: var(--superficie);
+    --bs-modal-color: var(--texto);
+    --bs-modal-border-color: var(--borda);
+    --bs-modal-header-border-color: transparent;
+    --bs-modal-footer-border-color: var(--borda);
+    --bs-modal-border-radius: 8px;
+    --bs-modal-inner-border-radius: 8px;
+}
+
+.modal-content {
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 20px 50px var(--sombra-forte);
+}
+
+.modal-header {
+    background: var(--grafite-escuro);
+    color: #fff;
+    border-bottom: 0;
+}
+
+.modal-header .modal-title {
+    color: #fff;
+}
+
+.modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal-body {
+    padding: 1.25rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--borda);
+}
+
+
+/* =============================================================
+   12. TOASTS
+============================================================= */
+
+.toast-container {
+    z-index: 1090;
+}
+
+.toast {
+    --bs-toast-bg: var(--superficie);
+    --bs-toast-color: var(--texto);
+    --bs-toast-header-bg: var(--superficie-2);
+    --bs-toast-header-color: var(--texto);
+    --bs-toast-border-color: var(--borda);
+
+    background: var(--superficie);
+    color: var(--texto);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    box-shadow: 0 12px 35px var(--sombra-forte);
+}
+
+.toast-header {
+    background: var(--superficie-2);
+    color: var(--texto);
+    border-bottom: 1px solid var(--borda);
+}
+
+.toast-body {
+    color: var(--texto);
+}
+
+.toast.toast-sucesso {
+    border-left: 4px solid var(--cor-sucesso);
+}
+
+.toast.toast-erro {
+    border-left: 4px solid var(--cor-erro);
+}
+
+.toast.toast-aviso {
+    border-left: 4px solid var(--laranja);
+}
+
+
+/* =============================================================
+   13. LOADING GLOBAL
+============================================================= */
+
+.loading-global {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--overlay);
+    backdrop-filter: blur(2px);
+}
+
+.loading-global.d-none {
+    display: none !important;
+}
+
+.loading-conteudo {
+    padding: 24px;
+    border-radius: 8px;
+    background: var(--superficie);
+    color: var(--texto);
+    text-align: center;
+    box-shadow: 0 0 15px var(--sombra);
+}
+
+.loading-conteudo .spinner-border {
+    color: var(--laranja);
+}
+
+
+/* =============================================================
+   14. RODAPÉ
+============================================================= */
+
+.app-footer {
+    background: var(--superficie);
+    color: var(--texto-suave);
+    border-top: 1px solid var(--borda);
+}
+
+
+/* =============================================================
+   15. TELA DE LOGIN
+   Usa as mesmas variáveis do sistema, então acompanha o tema.
+   Escopado em body.tela-login
+============================================================= */
+
+body.tela-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 24px;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+.tela-login .login-box {
+    width: 100%;
+    max-width: 400px;
+    margin: 0;
+}
+
+/* Card com faixa laranja no topo, como o header do sistema */
+.tela-login .login-card {
+    padding: 40px 36px 34px;
+    border-top: 4px solid var(--laranja);
+    border-radius: var(--raio);
+    box-shadow: 0 10px 30px var(--sombra);
+}
+
+.tela-login .login-titulo {
+    margin: 0 0 4px;
+    color: var(--texto);
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+.tela-login .login-subtitulo {
+    margin: 0 0 32px;
+    color: var(--texto-suave);
+    text-align: center;
+    font-size: 13px;
+}
+
+/* Campos: usam o .form-control global, com o ícone dentro */
+.tela-login .campo {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.tela-login .campo .form-control {
+    height: 44px;
+    padding-right: 40px;
+}
+
+.tela-login .campo .icone {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    color: var(--laranja);
+    font-size: 15px;
+    pointer-events: none;
+}
+
+.tela-login .campo .form-control.is-invalid ~ .icone {
+    color: var(--cor-erro);
+}
+
+/* Botão: mesmo laranja sólido do .btn-primary */
+.tela-login .btn-entrar {
+    display: block;
+    width: 100%;
+    margin-top: 26px;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: var(--raio);
+    background: var(--laranja);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    transition: background-color .2s ease;
+}
+
+.tela-login .btn-entrar:hover:not(:disabled) {
+    background: var(--laranja-escuro);
+}
+
+.tela-login .btn-entrar:focus-visible {
+    outline: 2px solid var(--laranja-escuro);
+    outline-offset: 3px;
+}
+
+.tela-login .btn-entrar:disabled {
+    opacity: .7;
+    cursor: not-allowed;
+}
+
+/* Seletor de tema dentro do card: texto + botão redondo */
+.tela-login .tema-seletor {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--borda);
+    color: var(--texto-suave);
+    font-size: 13px;
+}
+
+.tela-login .btn-tema {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--borda);
+    border-radius: 50%;
+    background: var(--superficie);
+    color: var(--texto);
+    box-shadow: 0 1px 3px var(--sombra);
+    cursor: pointer;
+    transition: color .2s ease, border-color .2s ease;
+}
+
+.tela-login .btn-tema:hover {
+    color: var(--laranja);
+    border-color: var(--laranja);
+}
+
+.tela-login .btn-tema:focus-visible {
+    outline: 2px solid var(--laranja);
+    outline-offset: 2px;
+}
+
+.tela-login .rodape {
+    margin-top: 22px;
+    color: var(--texto-suave);
+    text-align: center;
+    font-size: 12px;
+}
+
+
+/* =============================================================
+   16. RESPONSIVIDADE
+============================================================= */
+
+@media (max-width: 768px) {
+    .tabela-rodape {
+        grid-template-columns: 1fr;
+    }
+
+    .tabela-rodape .tabela-info,
+    .tabela-rodape .tabela-paginacao,
+    .tabela-rodape .tabela-por-pagina {
+        justify-self: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .app-header .navbar-titulo {
+        font-size: .95rem;
+        padding: 0 .4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        border-radius: 5px;
+    }
+
+    .tela-login .login-card {
+        padding: 36px 24px 30px;
+    }
+}
