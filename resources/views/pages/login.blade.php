@@ -20,6 +20,11 @@
 <body class="tela-login">
     <div class="login-box">
         <div class="card login-card">
+            <div class="login-logo">
+                <img class="logo-tema-claro" src="{{ asset('img/logo-brasa-sem-fundo.png') }}" alt="Brasa">
+                <img class="logo-tema-escuro" src="{{ asset('img/logo-brasa-branca.png') }}" alt="" aria-hidden="true">
+            </div>
+
             <h1 class="login-titulo">LOGIN</h1>
             <p class="login-subtitulo">Acesse sua conta</p>
 

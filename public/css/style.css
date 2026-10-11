@@ -14,7 +14,7 @@
    03. Formulários
    04. Botões
    05. Barra superior (header)
-   06. Menu lateral (sidebar)
+   06. Menu lateral (sidebar sempre escura, com modo ícones)
    07. Área de conteúdo e breadcrumb
    08. Cards
    09. Tabelas (inclui ordenação por coluna e rodapé com paginação)
@@ -49,6 +49,27 @@
     --sidebar-width: 250px;
     --lte-sidebar-width: var(--sidebar-width);
     --raio: 6px;
+    --altura-topo: 2.5rem;
+}
+
+/* Sidebar: SEMPRE escura.
+   - Tema claro: grafite, para dar contraste com o sistema.
+   - Tema escuro: tom do próprio sistema, com uma linha separando do conteúdo.
+   Os valores do tema escuro ficam em html[data-bs-theme="dark"] (e não em
+   [data-bs-theme="dark"]) porque a <aside> tem data-bs-theme="dark" e, se fosse
+   assim, herdaria o valor escuro mesmo com a página no tema claro */
+:root {
+    --sidebar-bg: var(--grafite);
+    --sidebar-bg-2: var(--grafite-escuro);
+    --sidebar-linha: var(--grafite-linha);
+    --sidebar-borda: transparent;
+}
+
+html[data-bs-theme="dark"] {
+    --sidebar-bg: #232120;
+    --sidebar-bg-2: #1b1a19;
+    --sidebar-linha: #2f2d2b;
+    --sidebar-borda: #3c3a38;
 }
 
 /* ---------- TEMA CLARO (padrão) ---------- */
@@ -301,6 +322,8 @@ a:hover {
 ============================================================= */
 
 .app-header.navbar {
+    height: var(--altura-topo);
+    min-height: var(--altura-topo);
     background: var(--laranja) !important;
     border-bottom: 0;
     box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
@@ -320,6 +343,22 @@ a:hover {
     cursor: pointer;
 }
 
+/* Logo centralizada na navbar (clicável: leva para a Home) */
+.app-header .navbar-logo {
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    min-width: 0;
+    padding: 0 .75rem;
+}
+
+.app-header .navbar-logo img {
+    display: block;
+    height: 1.5rem;
+    width: auto;
+    max-width: 100%;
+}
+
 /* Botão de tema: mostra a lua no tema claro e o sol no tema escuro */
 html[data-bs-theme="dark"] .icone-tema-claro,
 html:not([data-bs-theme="dark"]) .icone-tema-escuro {
@@ -337,7 +376,6 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
     display: flex;
     align-items: center;
     gap: .65rem;
-    padding: .55rem 1rem;
 }
 
 .app-header .dropdown-item i {
@@ -377,6 +415,12 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
     white-space: nowrap;
 }
 
+.app-header > .container-fluid::before {
+    content: "";
+    flex: 1 1 0;
+    min-width: 0;
+}
+
 
 /* =============================================================
    06. MENU LATERAL (SIDEBAR)
@@ -388,10 +432,10 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
     --lte-sidebar-hover-color: #fff;
     --lte-sidebar-hover-bg: rgba(255, 255, 255, .06);
     --lte-sidebar-menu-active-bg: var(--laranja);
-    --lte-sidebar-menu-active-color: #fff;
+    --lte-sidebar-menu-active-color: #fff;  
 
-    background: var(--grafite) !important;
-    border-right: 0;
+    background: var(--sidebar-bg) !important;
+    border-right: 1px solid var(--sidebar-borda);
     box-shadow: none;
 }
 
@@ -404,6 +448,55 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
 .app-sidebar .brand-link,
 .app-sidebar .brand-text {
     color: #fff;
+}
+
+/* Topo da sidebar: nome do sistema à esquerda e o hambúrguer à direita.
+   Com a barra recolhida (modo ícones) sobra só o hambúrguer, centralizado */
+.app-sidebar .sidebar-brand {
+    display: flex;
+    align-items: center;
+    height: var(--altura-topo);
+}
+
+.app-sidebar .sidebar-brand .brand-link {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-sidebar .sidebar-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-left: auto;
+    border-radius: var(--raio);
+    color: #fff;
+    transition: background-color .2s ease;
+}
+
+.app-sidebar .sidebar-toggle:hover,
+.app-sidebar .sidebar-toggle:focus-visible {
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+}
+
+.sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-brand {
+    justify-content: center;
+    padding: 0;
+}
+
+.sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-brand .brand-link {
+    display: none;
+}
+
+.sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-toggle {
+    margin-left: 0;
 }
 
 .app-sidebar .sidebar-wrapper {
@@ -420,9 +513,8 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
 
 /* Item de menu: linha divisória fina entre os itens */
 .app-sidebar .sidebar-menu .nav-link {
-    padding: .85rem 1.25rem;
     border-radius: 0;
-    border-bottom: 1px solid var(--grafite-linha);
+    border-bottom: 1px solid var(--sidebar-linha);
     color: var(--texto-sidebar);
     transition: background-color .2s ease, color .2s ease;
 }
@@ -448,11 +540,36 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
 
 /* Submenus */
 .app-sidebar .nav-treeview {
-    background: var(--grafite-escuro);
+    background: var(--sidebar-bg-2);
 }
 
 .app-sidebar .nav-treeview .nav-link {
     padding-left: 2.5rem;
+}
+
+/* ----- Modo ícones (body.sidebar-mini) -----
+   Com o menu recolhido pelo hambúrguer, a barra fica só com os ícones.
+   Os ícones são centralizados na barra estreita */
+.sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-menu .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-menu .nav-link .nav-icon {
+    margin: 0;
+}
+
+/* O AdminLTE encolhe o link na barra estreita e deixa uma sobra à direita.
+   Aqui o item ocupa a largura inteira, como na sidebar aberta */
+.sidebar-mini.sidebar-collapse .app-sidebar .sidebar-menu > .nav-item,
+.sidebar-mini.sidebar-collapse .app-sidebar .sidebar-menu > .nav-item > .nav-link {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 
@@ -480,7 +597,7 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
 .app-content-header h3,
 .app-content-header h4 {
     margin: 0;
-    color: var(--link);
+    color: var(--texto);
     font-size: 1.1rem;
     font-weight: 600;
 }
@@ -491,7 +608,7 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
 }
 
 .app-content-header .breadcrumb a {
-    color: var(--link) !important;
+    color: var(--texto);
     text-decoration: underline;
 }
 
@@ -580,17 +697,23 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
     color: var(--link-hover);
 }
 
-/* Tabela dentro de card: cantos arredondados.
-   Usa clip-path (e não overflow:hidden) para a rolagem horizontal
-   da .table-responsive continuar funcionando no celular */
-.card > .table-responsive,
+/* Tabela dentro de card: cantos arredondados no cabeçalho.
+   Não usa overflow:hidden nem clip-path, porque eles cortariam os
+   dropdowns das ações e atrapalhariam a rolagem horizontal no celular */
+.card > .table-responsive > .table,
 .card > .table {
-    clip-path: inset(0 round var(--raio) var(--raio) 0 0);
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.card > .table-responsive:last-child,
-.card > .table:last-child {
-    clip-path: inset(0 round var(--raio));
+.card > .table-responsive > .table > thead > tr:first-child > th:first-child,
+.card > .table > thead > tr:first-child > th:first-child {
+    border-top-left-radius: calc(var(--raio) - 1px);
+}
+
+.card > .table-responsive > .table > thead > tr:first-child > th:last-child,
+.card > .table > thead > tr:first-child > th:last-child {
+    border-top-right-radius: calc(var(--raio) - 1px);
 }
 
 /* ----- Colunas ordenáveis -----
@@ -712,6 +835,40 @@ html:not([data-bs-theme="dark"]) .icone-tema-escuro {
     background: var(--laranja);
     border-color: var(--laranja);
     color: #fff;
+}
+
+/* Ações da linha: botão principal + menu "três pontos" */
+.acoes-linha {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+}
+
+.acoes-linha .dropdown-toggle::after {
+    display: none;
+}
+
+.acoes-linha .dropdown-menu {
+    min-width: 9rem;
+    font-size: 13px;
+}
+
+.acoes-linha .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.acoes-linha .dropdown-item i {
+    width: 1.1rem;
+    text-align: center;
+    color: var(--laranja);
+}
+
+/* Ações destrutivas (Excluir) em vermelho */
+.acoes-linha .dropdown-item.acao-perigo,
+.acoes-linha .dropdown-item.acao-perigo i {
+    color: var(--cor-erro);
 }
 
 
@@ -921,7 +1078,7 @@ body.tela-login {
 }
 
 .tela-login .login-subtitulo {
-    margin: 0 0 32px;
+    margin: 0 0 12px;
     color: var(--texto-suave);
     text-align: center;
     font-size: 13px;
@@ -1026,6 +1183,24 @@ body.tela-login {
     color: var(--texto-suave);
     text-align: center;
     font-size: 12px;
+}
+
+/* Logo no topo do card. A versão certa aparece conforme o tema */
+.tela-login .login-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 22px;
+}
+
+.tela-login .login-logo img {
+    height: 50px;
+    width: auto;
+    max-width: 100%;
+}
+
+html[data-bs-theme="dark"] .logo-tema-claro,
+html:not([data-bs-theme="dark"]) .logo-tema-escuro {
+    display: none;
 }
 
 

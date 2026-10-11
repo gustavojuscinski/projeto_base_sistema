@@ -21,19 +21,12 @@
 </head>
 
 {{-- Removido bg-body-tertiary: essa classe usa !important e sobrescreve o fundo do tema --}}
-<body class="layout-fixed sidebar-expand-lg {{ config('adminlte.sidebar.collapsed', true) ? 'sidebar-collapse' : '' }}">
+<body class="layout-fixed sidebar-expand-lg sidebar-mini {{ config('adminlte.sidebar.collapsed', true) ? 'sidebar-collapse' : '' }}">
     <div class="app-wrapper">
 
         {{-- Navbar --}}
         <nav class="app-header navbar navbar-expand m-0 p-0">
             <div class="container-fluid">
-                <ul class="navbar-nav navbar-lado">
-                    <li class="nav-item">
-                        <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button" aria-label="Expandir ou recolher menu">
-                            <i class="fa-solid fa-bars"></i>
-                        </a>
-                    </li>
-                </ul>
 
                 <h3 class="navbar-titulo">
                     @yield('title', config('adminlte.title', config('app.name', 'Sistema')))
@@ -74,10 +67,8 @@
         {{-- Sidebar (removido bg-body-secondary: o grafite vem do style.css) --}}
         <aside class="app-sidebar shadow" data-bs-theme="dark">
             <div class="sidebar-brand">
-                <a href="{{ route('home') }}" class="brand-link">
-                    <span class="brand-text fw-light">
-                        {{ config('adminlte.title', config('app.name', 'Sistema')) }}
-                    </span>
+                <a href="{{ route('home') }}" class="" title="Ir para a Home" aria-label="Brasa - Ir para a Home">
+                    <img src="{{ asset('img/logo-brasa-branca.png') }}" alt="Brasa" width="30">
                 </a>
             </div>
 
@@ -93,8 +84,7 @@
 
                             @if ($autorizado)
                                 <li class="nav-item">
-                                    <a href="{{ route($menu['route']) }}"
-                                       class="nav-link {{ request()->routeIs($menu['route']) ? 'active' : '' }}">
+                                    <a href="{{ route($menu['route']) }}" title="{{ $menu['label'] }}" class="nav-link {{ request()->routeIs($menu['route']) ? 'active' : '' }}">
 
                                         <i class="nav-icon {{ $menu['icon'] ?? 'fa-regular fa-circle' }}"></i>
                                         <p>{{ $menu['label'] }}</p>

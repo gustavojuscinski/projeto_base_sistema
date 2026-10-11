@@ -245,10 +245,31 @@
                 `;
             } else {
                 dados.forEach(function (usuario) {
-                    var htmlBotoes = `<div>
-                                        <button class="btn btn-primary m-0 py-0 px-1" onclick="editarCadastro(${usuario.ID_USUARIO})"><i class="fa-solid fa-edit"></i></button>
-                                        <button class="btn btn-danger m-0 py-0 px-1" onclick="excluirCadastro(${usuario.ID_USUARIO})"><i class="fa-solid fa-trash"></i></button>
-                                    </div>`;
+                    var htmlBotoes = `
+                                <div class="acoes-linha">
+                                    <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar"
+                                            onclick="editarCadastro(${usuario.ID_USUARIO})">
+                                        <i class="fa-solid fa-edit"></i>
+                                    </button>
+
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle"
+                                                title="Mais ações" aria-label="Mais ações" aria-expanded="false"
+                                                data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'>
+                                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                                        </button>
+
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <button type="button" class="dropdown-item acao-perigo"
+                                                        onclick="excluirCadastro(${usuario.ID_USUARIO})">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                    <span>Excluir</span>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>`;
                     linhas += `
                         <tr>
                             <td>${usuario.ID_USUARIO}</td>
