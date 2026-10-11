@@ -29,7 +29,7 @@
             <div class="container-fluid">
 
                 <h3 class="navbar-titulo">
-                    @yield('title', config('adminlte.title', config('app.name', 'Sistema')))
+                    @yield('page-title', config('adminlte.title', config('app.name', 'Sistema')))
                 </h3>
 
                 <ul class="navbar-nav navbar-lado navbar-lado-direito">
