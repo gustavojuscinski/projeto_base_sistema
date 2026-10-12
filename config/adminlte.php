@@ -47,7 +47,11 @@ return [
                 'icon' => 'fa-solid fa-user',
                 'route' => 'usuarios.index',
             ],
-
+            [
+                'label' => 'Configurações',
+                'icon' => 'fa-solid fa-gear',
+                'route' => 'configuracoes.index',
+            ],
         ],
 
     ],
