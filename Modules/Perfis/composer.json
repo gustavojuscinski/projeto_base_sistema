@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/perfis",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Perfis\\": "app/",
+            "Modules\\Perfis\\Database\\Factories\\": "database/factories/",
+            "Modules\\Perfis\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Perfis\\Tests\\": "tests/"
+        }
+    }
+}

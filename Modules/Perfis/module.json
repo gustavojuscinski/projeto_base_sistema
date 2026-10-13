@@ -1,0 +1,11 @@
+{
+    "name": "Perfis",
+    "alias": "perfis",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Perfis\\Providers\\PerfisServiceProvider"
+    ],
+    "files": []
+}

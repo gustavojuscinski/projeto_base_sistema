@@ -1,5 +1,6 @@
 {
     "Usuarios": true,
     "Configuracao": true,
-    "Equipes": true
+    "Equipes": true,
+    "Perfis": true
 }
