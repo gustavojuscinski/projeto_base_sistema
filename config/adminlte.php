@@ -2,56 +2,47 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Configurações gerais do AdminLTE
-    |--------------------------------------------------------------------------
-    */
-
     'title' => env('APP_NAME', 'Sistema'),
 
     'version' => '1.0.0',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Sidebar
-    |--------------------------------------------------------------------------
-    */
-
     'sidebar' => [
 
-        // Inicia a sidebar recolhida, exibindo os ícones.
         'collapsed' => true,
 
-        /*
-        |--------------------------------------------------------------------------
-        | Menus
-        |--------------------------------------------------------------------------
-        |
-        | label: texto exibido
-        | icon: classe do Bootstrap Icons
-        | route: nome da rota Laravel
-        | can: Gate opcional para verificar permissão
-        |
-        */
-
         'menus' => [
-
             [
                 'label' => 'Home',
                 'icon' => 'fa-solid fa-house',
                 'route' => 'home',
             ],
             [
-                'label' => 'Usuários',
-                'icon' => 'fa-solid fa-user',
-                'route' => 'usuarios.index',
+                'label' => 'Rendas Uber',
+                'icon' => 'fa-solid fa-car',
+                'route' => 'rendauber.index',
             ],
             [
                 'label' => 'Configurações',
                 'icon' => 'fa-solid fa-gear',
-                'route' => 'configuracoes.index',
+                'submenu' => [
+                    [
+                        'label' => 'Usuários',
+                        'icon' => 'fa-solid fa-user',
+                        'route' => 'usuarios.index',
+                    ],  
+                    [
+                        'label' => 'Perfis',
+                        'icon' => 'fa-solid fa-user-shield',
+                        'route' => 'perfis.index',
+                    ],
+                    [
+                        'label' => 'Equipes',
+                        'icon' => 'fa-solid fa-user-group',
+                        'route' => 'equipes.index',
+                    ],
+                ],
             ],
+
         ],
 
     ],

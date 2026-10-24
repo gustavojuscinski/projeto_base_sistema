@@ -80,16 +80,80 @@
                             @php
                                 $gate = $menu['can'] ?? null;
 
-                                $autorizado = !$gate || \Illuminate\Support\Facades\Gate::has($gate) && \Illuminate\Support\Facades\Gate::allows($gate);
+                                $autorizado = !$gate || (
+                                    \Illuminate\Support\Facades\Gate::has($gate) &&
+                                    \Illuminate\Support\Facades\Gate::allows($gate)
+                                );
+
+                                $submenus = [];
+
+                                foreach (($menu['submenu'] ?? []) as $submenu) {
+                                    $gateSubmenu = $submenu['can'] ?? null;
+
+                                    if (!$gateSubmenu || (
+                                        \Illuminate\Support\Facades\Gate::has($gateSubmenu) &&
+                                        \Illuminate\Support\Facades\Gate::allows($gateSubmenu)
+                                    )) {
+                                        $submenus[] = $submenu;
+                                    }
+                                }
+
+                                $possuiSubmenu = !empty($menu['submenu']);
+                                $rotaMenu = $menu['route'] ?? null;
+
+                                $menuAtivo = $rotaMenu && request()->routeIs($rotaMenu);
+
+                                foreach ($submenus as $submenu) {
+                                    if (!empty($submenu['route']) && request()->routeIs($submenu['route'])) {
+                                        $menuAtivo = true;
+                                    }
+                                }
+
+                                $exibirMenu = $autorizado && (!$possuiSubmenu || count($submenus) > 0);
                             @endphp
 
-                            @if ($autorizado)
+                            @if ($exibirMenu)
                                 <li class="nav-item">
-                                    <a href="{{ route($menu['route']) }}" title="{{ $menu['label'] }}" class="nav-link {{ request()->routeIs($menu['route']) ? 'active' : '' }}">
+
+                                    <a href="{{ $possuiSubmenu ? '#' : ($rotaMenu ? route($rotaMenu) : '#') }}"
+                                    title="{{ $menu['label'] }}"
+                                    class="nav-link {{ $menuAtivo ? 'active' : '' }}">
 
                                         <i class="nav-icon {{ $menu['icon'] ?? 'fa-regular fa-circle' }}"></i>
-                                        <p>{{ $menu['label'] }}</p>
+
+                                        <p>
+                                            {{ $menu['label'] }}
+
+                                            @if ($possuiSubmenu)
+                                                <i class="nav-arrow fa-solid fa-angle-right"></i>
+                                            @endif
+                                        </p>
                                     </a>
+
+                                    @if ($possuiSubmenu)
+                                        <ul class="nav nav-treeview">
+
+                                            @foreach ($submenus as $submenu)
+                                                @php
+                                                    $rotaSubmenu = $submenu['route'] ?? null;
+                                                    $submenuAtivo = $rotaSubmenu && request()->routeIs($rotaSubmenu);
+                                                @endphp
+
+                                                <li class="nav-item">
+                                                    <a href="{{ $rotaSubmenu ? route($rotaSubmenu) : '#' }}"
+                                                    title="{{ $submenu['label'] }}"
+                                                    class="nav-link {{ $submenuAtivo ? 'active' : '' }}">
+
+                                                        <i class="nav-icon {{ $submenu['icon'] ?? 'fa-regular fa-circle' }}"></i>
+
+                                                        <p>{{ $submenu['label'] }}</p>
+                                                    </a>
+                                                </li>
+                                            @endforeach
+
+                                        </ul>
+                                    @endif
+
                                 </li>
                             @endif
                         @endforeach
