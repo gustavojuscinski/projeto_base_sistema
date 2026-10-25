@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/formapagamento",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\FormaPagamento\\": "app/",
+            "Modules\\FormaPagamento\\Database\\Factories\\": "database/factories/",
+            "Modules\\FormaPagamento\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\FormaPagamento\\Tests\\": "tests/"
+        }
+    }
+}

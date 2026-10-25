@@ -3,5 +3,6 @@
     "Configuracao": true,
     "Equipes": true,
     "Perfis": true,
-    "RendaUber": true
+    "RendaUber": true,
+    "FormaPagamento": true
 }

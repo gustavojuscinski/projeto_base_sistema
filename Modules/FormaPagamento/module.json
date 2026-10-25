@@ -1,0 +1,11 @@
+{
+    "name": "FormaPagamento",
+    "alias": "formapagamento",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FormaPagamento\\Providers\\FormaPagamentoServiceProvider"
+    ],
+    "files": []
+}
