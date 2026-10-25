@@ -1,0 +1,11 @@
+{
+    "name": "RendaUber",
+    "alias": "rendauber",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\RendaUber\\Providers\\RendaUberServiceProvider"
+    ],
+    "files": []
+}

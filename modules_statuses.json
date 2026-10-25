@@ -2,5 +2,6 @@
     "Usuarios": true,
     "Configuracao": true,
     "Equipes": true,
-    "Perfis": true
+    "Perfis": true,
+    "RendaUber": true
 }
