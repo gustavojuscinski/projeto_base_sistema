@@ -42,6 +42,17 @@ return [
                     ],
                 ],
             ],
+            [
+                'label' => 'Financeiro',
+                'icon' => 'fa-solid fa-money-bill',
+                'submenu' => [
+                    [
+                        'label' => 'Forma de Pagamento',
+                        'icon' => 'fa-solid fa-credit-card',
+                        'route' => 'forma-pagamentos.index',
+                    ],
+                ],
+            ],
 
         ],
 
