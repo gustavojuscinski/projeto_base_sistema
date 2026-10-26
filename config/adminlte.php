@@ -45,6 +45,12 @@ return [
                         'route' => 'equipes.index',
                         'can' => 'WEB_MENU_CADASTRO_EQUIPE',
                     ],
+                    [
+                        'label' => 'Vendedores',
+                        'icon' => 'fa-solid fa-user-group',
+                        'route' => 'vendedores.index',
+                        'can' => 'WEB_MENU_CADASTRO_VENDEDOR',
+                    ],
                 ],
             ],
             [
