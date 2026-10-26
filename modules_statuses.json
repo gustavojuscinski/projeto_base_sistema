@@ -4,5 +4,6 @@
     "Equipes": true,
     "Perfis": true,
     "RendaUber": true,
-    "FormaPagamento": true
+    "FormaPagamento": true,
+    "Vendedores": true
 }
