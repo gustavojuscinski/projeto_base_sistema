@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/filiais",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Filiais\\": "app/",
+            "Modules\\Filiais\\Database\\Factories\\": "database/factories/",
+            "Modules\\Filiais\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Filiais\\Tests\\": "tests/"
+        }
+    }
+}

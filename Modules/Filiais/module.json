@@ -1,0 +1,11 @@
+{
+    "name": "Filiais",
+    "alias": "filiais",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Filiais\\Providers\\FiliaisServiceProvider"
+    ],
+    "files": []
+}
