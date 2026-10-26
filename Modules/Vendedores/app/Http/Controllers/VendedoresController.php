@@ -26,18 +26,17 @@ class VendedoresController extends Controller
             $termoBusca = DB::getPdo()->quote('%' . $dadosRecebidos['FILTRO_BUSCA'] . '%');
             $filtroBusca = "AND (vendedores.NOME_VENDEDOR LIKE $termoBusca
                               OR usuarios.NOME_USUARIO LIKE $termoBusca
-                              OR filial.DESCRICAO LIKE $termoBusca)";
+                              OR filiais.DESCRICAO LIKE $termoBusca)";
         }
 
-        $filtroStatus = (isset($dadosRecebidos['INATIVOS']) && $dadosRecebidos['INATIVOS'] == 1)
-            ? "AND vendedores.STATUS = 'I'" : "AND vendedores.STATUS = 'A'";
+        $filtroStatus = (isset($dadosRecebidos['INATIVOS']) && $dadosRecebidos['INATIVOS'] == 1) ? "AND vendedores.STATUS = 'I'" : "AND vendedores.STATUS = 'A'";
 
         $colunasOrdenaveis = ['ID_VENDEDOR', 'NOME_VENDEDOR', 'NOME_USUARIO', 'DESCRICAO_FILIAL', 'QTDE_HORARIOS'];
         $colunasSQL = [
             'ID_VENDEDOR' => 'vendedores.ID_VENDEDOR',
             'NOME_VENDEDOR' => 'vendedores.NOME_VENDEDOR',
             'NOME_USUARIO' => 'usuarios.NOME_USUARIO',
-            'DESCRICAO_FILIAL' => 'filial.DESCRICAO',
+            'DESCRICAO_FILIAL' => 'filiais.DESCRICAO',
             'QTDE_HORARIOS' => 'QTDE_HORARIOS'
         ];
         $filtroOrderBy = 'ORDER BY vendedores.NOME_VENDEDOR, vendedores.ID_VENDEDOR';
@@ -71,7 +70,7 @@ class VendedoresController extends Controller
                        , vendedores.NOME_VENDEDOR
                        , vendedores.DT_HORA_CADASTRO
                        , usuarios.NOME_USUARIO
-                       , filial.DESCRICAO AS DESCRICAO_FILIAL
+                       , filiais.DESCRICAO AS DESCRICAO_FILIAL
                        , (SELECT COUNT(*)
                             FROM horario_vendedor
                            WHERE horario_vendedor.ID_VENDEDOR = vendedores.ID_VENDEDOR
@@ -79,14 +78,14 @@ class VendedoresController extends Controller
                        , (SELECT COUNT(*)
                             FROM vendedores
                             LEFT JOIN usuarios ON usuarios.ID_USUARIO = vendedores.ID_USUARIO_VINCULADO
-                            LEFT JOIN filial ON filial.ID_CODIGO = vendedores.ID_FILIAL
+                            LEFT JOIN filiais ON filiais.ID_CODIGO = vendedores.ID_FILIAL
                            WHERE 1 = 1
                            $filtroBusca
                            $filtroStatus
                            $filtroVendedor) AS TOTAL_REGISTROS
                     FROM vendedores
                     LEFT JOIN usuarios ON usuarios.ID_USUARIO = vendedores.ID_USUARIO_VINCULADO
-                    LEFT JOIN filial ON filial.ID_CODIGO = vendedores.ID_FILIAL
+                    LEFT JOIN filiais ON filiais.ID_CODIGO = vendedores.ID_FILIAL
                    WHERE 1 = 1
                    $filtroBusca
                    $filtroStatus
