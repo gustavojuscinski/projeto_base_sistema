@@ -76,24 +76,38 @@
             <div class="sidebar-wrapper">
                 <nav class="mt-2">
                     <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu">
+                        @php
+                            $usuarioLogado = usuarioAutenticado();
+                            $idUsuarioMenu = (int) ($usuarioLogado['ID_USUARIO'] ?? 0);
+                            $permissoesUsuario = [];
+
+                            if ($idUsuarioMenu > 0) {
+                                $query = "SELECT permissoes.NOME
+                                            FROM permissao_usuario
+                                            INNER JOIN permissoes
+                                                    ON permissoes.ID_CODIGO = permissao_usuario.ID_PERMISSAO
+                                           WHERE permissao_usuario.ID_USUARIO = $idUsuarioMenu
+                                             AND permissao_usuario.STATUS = 'A'
+                                             AND permissoes.STATUS = 'A'";
+                                $result = executarSQL($query);
+
+                                foreach ($result ?: [] as $permissao) {
+                                    $permissoesUsuario[] = is_array($permissao) ? $permissao['NOME'] : $permissao->NOME;
+                                }
+                            }
+                        @endphp
                         @foreach (config('adminlte.sidebar.menus', []) as $menu)
                             @php
                                 $gate = $menu['can'] ?? null;
 
-                                $autorizado = !$gate || (
-                                    \Illuminate\Support\Facades\Gate::has($gate) &&
-                                    \Illuminate\Support\Facades\Gate::allows($gate)
-                                );
+                                $autorizado = !$gate || in_array($gate, $permissoesUsuario, true);
 
                                 $submenus = [];
 
                                 foreach (($menu['submenu'] ?? []) as $submenu) {
                                     $gateSubmenu = $submenu['can'] ?? null;
 
-                                    if (!$gateSubmenu || (
-                                        \Illuminate\Support\Facades\Gate::has($gateSubmenu) &&
-                                        \Illuminate\Support\Facades\Gate::allows($gateSubmenu)
-                                    )) {
+                                    if (!$gateSubmenu || in_array($gateSubmenu, $permissoesUsuario, true)) {
                                         $submenus[] = $submenu;
                                     }
                                 }

@@ -13,4 +13,7 @@ Route::middleware(VerificarAutenticacao::class)->group(function () {
 
     Route::post('/buscar/equipes', [UsuariosController::class, 'buscarEquipes'])->name('usuarios.equipes.buscar');
     Route::post('/buscar/perfis', [UsuariosController::class, 'buscarPerfis'])->name('usuarios.perfis.buscar');
+
+    Route::post('/buscar/permissoes/usuario', [UsuariosController::class, 'buscarPermissoesUsuario'])->name('usuarios.permissoes.buscar');
+    Route::post('/alterar/permissoes/usuario', [UsuariosController::class, 'alterarPermissoesUsuario'])->name('usuarios.permissoes.alterar');
 });

@@ -111,6 +111,47 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalPermissoes" tabindex="-1" aria-labelledby="modalPermissoesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalPermissoesLabel">Permissões do Usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="inputIdUsuarioPermissoes">
+
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="inputFiltroPermissoes"
+                               placeholder="Buscar permissão por nome ou descrição" aria-label="Buscar permissão">
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 55vh; overflow-y: auto;">
+                        <table class="table table-striped align-middle mb-0" id="tabelaPermissoes">
+                            <thead>
+                                <tr>
+                                    <th style="width: 8%;">ID</th>
+                                    <th style="width: 30%;">Nome</th>
+                                    <th>Descrição</th>
+                                    <th class="text-center" style="width: 12%;">Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr><td colspan="3" class="text-center">Carregando permissões...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -260,6 +301,13 @@
                                         </button>
 
                                         <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <button type="button" class="dropdown-item"
+                                                        onclick="visualizarPermissoes(${usuario.ID_USUARIO})">
+                                                    <i class="fa-solid fa-key"></i>
+                                                    <span>Permissões</span>
+                                                </button>
+                                            </li>
                                             <li>
                                                 <button type="button" class="dropdown-item acao-perigo"
                                                         onclick="excluirCadastro(${usuario.ID_USUARIO})">
@@ -484,6 +532,111 @@
 
             $('#selectPerfis').html(htmlDados);
         }
+        
+        function visualizarPermissoes(idUsuario){
+            $('#inputIdUsuarioPermissoes').val(idUsuario);
+            $('#inputFiltroPermissoes').val('');
+            $('#tabelaPermissoes tbody').html('<tr><td colspan="3" class="text-center">Carregando permissões...</td></tr>');
+            $('#modalPermissoes').modal('show');
+
+            requisicaoAjax({
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    '_token': '{{ csrf_token() }}',
+                    'ID_USUARIO': idUsuario
+                },
+                url: "{{ route('usuarios.permissoes.buscar') }}",
+                success: function (r) {
+                    // Evita exibir o retorno de outro usuário se o modal foi reaberto.
+                    if ($('#inputIdUsuarioPermissoes').val() != idUsuario) return;
+                    popularTabelaPermissoes(r.dados || []);
+                },
+                error: function (err) {
+                    if ($('#inputIdUsuarioPermissoes').val() != idUsuario) return;
+                    $('#tabelaPermissoes tbody').html('<tr><td colspan="3" class="text-center">Erro ao carregar permissões.</td></tr>');
+                    console.error('Erro ao buscar permissões:', err);
+                }
+            });
+        }
+
+        function popularTabelaPermissoes(dados){
+            let linhas = '';
+
+            if (dados.length === 0) {
+                linhas = '<tr><td colspan="4" class="text-center">Nenhuma permissão encontrada.</td></tr>';
+            } else {
+                dados.forEach(function (permissao) {
+                    const permitido = Number(permissao.USUARIO_POSSUI_PERMISSAO) === 1;
+                    const idPermissao = Number(permissao.ID_CODIGO);
+                    const nome = $('<div>').text(permissao.NOME ?? '').html();
+                    const descricao = $('<div>').text(permissao.DESCRICAO ?? '').html();
+
+                    linhas += `
+                        <tr>
+                            <td>${idPermissao}</td>
+                            <td>${nome}</td>
+                            <td>${descricao}</td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                    <input class="form-check-input switch-permissao m-0"
+                                        type="checkbox"
+                                        role="switch"
+                                        id="permissao_${idPermissao}"
+                                        data-id-permissao="${idPermissao}"
+                                        aria-label="Permissão ${descricao}"
+                                        ${permitido ? 'checked' : ''}>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            }
+
+            $('#tabelaPermissoes tbody').html(linhas);
+            $('#inputFiltroPermissoes').trigger('input');
+        }
+        
+        $('#inputFiltroPermissoes').on('input', function () {
+            const filtro = $(this).val().trim().toLocaleLowerCase('pt-BR');
+
+            $('#tabelaPermissoes tbody tr').each(function () {
+                const id = $(this).find('td:eq(0)').text().trim();
+                const nome = $(this).find('td:eq(1)').text().toLocaleLowerCase('pt-BR');
+                const descricao = $(this).find('td:eq(2)').text().toLocaleLowerCase('pt-BR');
+
+                $(this).toggle(id.includes(filtro) || nome.includes(filtro) || descricao.includes(filtro));
+            });
+        });
+
+        $('#tabelaPermissoes').on('change', '.switch-permissao', function () {
+            const botao = $(this);
+            const idUsuario = $('#inputIdUsuarioPermissoes').val();
+            const idPermissao = botao.data('id-permissao');
+            const permitido = botao.is(':checked') ? 1 : 0;
+
+            botao.prop('disabled', true);
+
+            requisicaoAjax({
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    '_token': '{{ csrf_token() }}',
+                    'ID_USUARIO': idUsuario,
+                    'ID_PERMISSAO': idPermissao,
+                    'PERMITIDO': permitido
+                },
+                url: "{{ route('usuarios.permissoes.alterar') }}",
+                success: function (r) {
+                    botao.prop('disabled', false);
+                    informarSucesso(r.mensagem || 'Permissão atualizada com sucesso!');
+                },
+                error: function (err) {
+                    botao.prop('checked', !permitido).prop('disabled', false);
+                    console.error('Erro ao atualizar permissão:', err);
+                    informarAviso('Não foi possível atualizar a permissão.');
+                }
+            });
+        });
 
         // Clique: ASC -> DESC -> sem ordenação. Shift + clique soma colunas (ordenação múltipla)
         $('#tabelaUsuarios thead').on('click', 'th.ordenavel', function (evento) {

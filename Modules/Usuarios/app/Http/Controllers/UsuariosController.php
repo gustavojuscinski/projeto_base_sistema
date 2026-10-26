@@ -176,4 +176,88 @@ class UsuariosController extends Controller
 
         return exibirRetorno($result, true, 'Perfis buscadas com sucesso.');
     }
+
+    public function buscarPermissoesUsuario(Request $request){
+        $dadosRecebidos = $request->except('_token');
+        $idUsuario = (int) $dadosRecebidos['ID_USUARIO'];
+
+        $query = "SELECT permissoes.ID_CODIGO
+                       , permissoes.NOME
+                       , permissoes.DESCRICAO
+                       , CASE
+                           WHEN EXISTS (SELECT 1
+                                          FROM permissao_usuario
+                                         WHERE permissao_usuario.ID_PERMISSAO = permissoes.ID_CODIGO
+                                           AND permissao_usuario.ID_USUARIO = $idUsuario
+                                           AND permissao_usuario.STATUS = 'A') THEN 1
+                           ELSE 0
+                           END AS USUARIO_POSSUI_PERMISSAO
+                    FROM permissoes
+                   WHERE permissoes.STATUS = 'A'
+                   ORDER BY permissoes.NOME";
+        $result = executarSQL($query);
+
+        return exibirRetorno($result, true, 'Permissões do usuário buscadas com sucesso.');
+    }
+
+    public function alterarPermissoesUsuario(Request $request){
+        $dadosRecebidos = $request->except('_token');
+        $idUsuario = $dadosRecebidos['ID_USUARIO'] ?? 0;
+        $idPermissao = $dadosRecebidos['ID_PERMISSAO'] ?? 0;
+        $permitido = $dadosRecebidos['PERMITIDO'] ?? null;
+
+        if ($idUsuario <= 0 || $idPermissao <= 0 || !in_array($permitido, ['0', '1'], true)) {
+            return exibirRetorno(false, false, 'Dados da permissão inválidos.');
+        }
+
+        $query = "SELECT ID_USUARIO
+                    FROM usuarios
+                   WHERE ID_USUARIO = $idUsuario
+                     AND STATUS = 'A'";
+        $usuario = executarSQL($query);
+
+        $query = "SELECT ID_CODIGO
+                    FROM permissoes
+                   WHERE ID_CODIGO = $idPermissao
+                     AND STATUS = 'A'";
+        $permissao = executarSQL($query);
+
+        if (empty($usuario) || empty($permissao)) {
+            return exibirRetorno(false, false, 'Usuário ou permissão não encontrado.');
+        }
+
+        $query = "SELECT ID_CODIGO
+                    FROM permissao_usuario
+                   WHERE ID_USUARIO = $idUsuario
+                     AND ID_PERMISSAO = $idPermissao";
+        $result = executarSQL($query);
+
+        if (!empty($result)) {
+            $status = $permitido == 1 ? 'A' : 'I';
+
+            $query = "UPDATE permissao_usuario
+                         SET STATUS = '$status'
+                       WHERE ID_USUARIO = $idUsuario
+                         AND ID_PERMISSAO = $idPermissao";
+            $result = executarSQL($query);
+        } else {
+            if ($permitido == 0) {
+                return exibirRetorno(true, true, 'Permissão revogada com sucesso!');
+            }
+
+            $query = "INSERT INTO permissao_usuario (ID_USUARIO
+                                                   , ID_PERMISSAO
+                                                   , DT_HORA_CADASTRO
+                                                   , STATUS)
+                    VALUES ($idUsuario
+                          , $idPermissao
+                          , NOW()
+                          , 'A')";
+            $result = executarSQL($query);
+        }
+
+        $mensagem = $permitido == 1 ? 'Permissão liberada com sucesso!' : 'Permissão revogada com sucesso!';
+
+        return exibirRetorno($result, true, $mensagem);
+    }
 }
