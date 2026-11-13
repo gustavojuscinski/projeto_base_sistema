@@ -55,6 +55,7 @@ return [
                         'label' => 'Clientes',
                         'icon' => 'fa-solid fa-user-group',
                         'route' => 'clientes.index',
+                        'can' => 'WEB_MENU_CADASTRO_CLIENTE',
                     ],
                 ],
             ],
@@ -74,11 +75,13 @@ return [
             [
                 'label' => 'Ordem de Serviço',
                 'icon' => 'fa-solid fa-file-invoice',
+                'canany' => ['WEB_MENU_ORDEM_SERVICO'],
                 'submenu' => [
                     [
                         'label' => 'Ordem de Serviço',
                         'icon' => 'fa-solid fa-file-invoice',
                         'route' => 'ordem-servico.index',
+                        'can' => 'WEB_MENU_ORDEM_SERVICO',
                     ],
                 ],
             ],
