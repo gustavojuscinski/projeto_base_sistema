@@ -4,23 +4,47 @@
 @section('page-title', 'Ordem de Serviço')
 
 @section('content')
+    @php
+        $usuarioAtual = usuarioAutenticado();
+        $idUsuarioAtual = (int) ($usuarioAtual['ID_USUARIO'] ?? 0);
+        $idPerfilAtual = (int) (\Illuminate\Support\Facades\DB::table('usuarios')
+            ->where('ID_USUARIO', $idUsuarioAtual)->value('ID_PERFIL') ?? 0);
+        $descricaoPerfil = (string) (\Illuminate\Support\Facades\DB::table('perfis')
+            ->where('ID_CODIGO', $idPerfilAtual)->value('DESCRICAO') ?? '');
+        $administrador = mb_strtolower(trim($descricaoPerfil), 'UTF-8') === 'administrador';
+    @endphp
     <div>
-        <div class="d-flex gap-2">
-            <div class="input-group flex-grow-1">
-                <input type="text" class="form-control" placeholder="Buscar OS, cliente, telefone ou equipamento" id="inputFiltroOrdemServico">
-                <label class="input-group-text gap-2" for="checkPesquisarInativos">
-                    <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
-                    <span class="text-nowrap">Inativos</span>
-                </label>
-            </div>
-            <button type="button" class="btn btn-primary text-nowrap" id="btnNovaOrdemServico">
-                <i class="fa-solid fa-plus me-1"></i>Novo
+        <div class="d-flex justify-content-between align-items-center gap-2 d-lg-none mb-2">
+            <button type="button" class="btn btn-outline-secondary" id="btnAlternarFiltrosOrdemServico"
+                    data-bs-toggle="collapse" data-bs-target="#painelFiltrosOrdemServico"
+                    aria-expanded="false" aria-controls="painelFiltrosOrdemServico">
+                <i class="fa-solid fa-filter me-1"></i><span id="rotuloFiltrosOrdemServico">Mostrar filtros</span>
             </button>
+            @if ($administrador)
+                <button type="button" class="btn btn-primary text-nowrap" id="btnNovaOrdemServicoMobile">
+                    <i class="fa-solid fa-plus me-1"></i>Novo
+                </button>
+            @endif
+        </div>
+
+        <div id="painelFiltrosOrdemServico" class="collapse d-lg-block">
+            <div class="d-flex flex-column flex-lg-row align-items-stretch gap-2">
+                <input type="text" class="form-control flex-grow-1" placeholder="Buscar OS, cliente, telefone ou equipamento" id="inputFiltroOrdemServico">
+                <label class="d-flex align-items-center gap-2 px-2 py-2 border rounded" for="checkPesquisarInativos">
+                    <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
+                    <span class="text-nowrap">Pesquisar inativos</span>
+                </label>
+                @if ($administrador)
+                    <button type="button" class="btn btn-primary text-nowrap d-none d-lg-inline-block" id="btnNovaOrdemServico">
+                        <i class="fa-solid fa-plus me-1"></i>Novo
+                    </button>
+                @endif
+            </div>
         </div>
 
         <div class="card mt-2">
-            <div class="table-responsive">
-                <table class="table table-striped" id="tabelaOrdensServico">
+            <div class="table-responsive d-none d-lg-block">
+                <table class="table table-striped" id="tabelaOrdensServico" aria-label="Tabela de ordens de serviço">
                     <thead>
                         <tr>
                             <th class="ordenavel" data-coluna="ID_CODIGO" tabindex="0" aria-sort="none">OS</th>
@@ -34,6 +58,7 @@
                     <tbody></tbody>
                 </table>
             </div>
+            <div id="cardsOrdensServicoMobile" class="d-lg-none p-2" aria-live="polite"></div>
             <div class="card-footer tabela-rodape">
                 <div class="tabela-info" id="infoContagem" aria-live="polite"></div>
                 <nav class="tabela-paginacao" aria-label="Paginação da lista">
@@ -52,6 +77,7 @@
         </div>
     </div>
 
+    @if ($administrador)
     <div class="modal fade" id="modalOrdemServico" tabindex="-1" aria-labelledby="modalOrdemServicoLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
@@ -204,6 +230,7 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -216,6 +243,7 @@
         let temporizadorEquipamento;
         let sequenciaCliente = 0;
         let sequenciaEquipamento = 0;
+        const usuarioEhAdministradorOS = @json($administrador);
 
         function getFuncaoPadrao(){
             return buscarDados();
@@ -294,48 +322,62 @@
 
         function popularTabelaDados(dados){
             let linhas = '';
+            let cards = '';
             if (!dados.length) {
                 linhas = '<tr><td colspan="6" class="text-center">Nenhuma ordem de serviço encontrada.</td></tr>';
+                cards = '<div class="text-center text-secondary py-4">Nenhuma ordem de serviço encontrada.</div>';
             } else {
                 dados.forEach(function(ordem){
+                    const id = Number(ordem.ID_CODIGO);
                     const nome = $('<div>').text(ordem.NOME_CLIENTE ?? '').html();
                     const equipamento = $('<div>').text([ordem.MARCA_EQUIPAMENTO, ordem.MODELO_EQUIPAMENTO].filter(Boolean).join(' - ')).html();
+                    const data = $('<div>').text(ordem.DT_HORA_CADASTRO ? aplicarMascaraData(ordem.DT_HORA_CADASTRO) : '').html();
                     const total = Number(ordem.VALOR_TOTAL || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    linhas += `
-                        <tr>
-                            <td>${Number(ordem.ID_CODIGO)}</td>
-                            <td>${aplicarMascaraData(ordem.DT_HORA_CADASTRO)}</td>
-                            <td>${nome}</td>
-                            <td>${equipamento}</td>
-                            <td>${total}</td>
-                            <td>
-                                <div class="acoes-linha">
-                                    <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar" onclick="editarCadastro(${Number(ordem.ID_CODIGO)})">
-                                        <i class="fa-solid fa-edit"></i>
-                                    </button>
-                                    <div class="dropdown">
-                                        <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle" title="Mais ações" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'>
-                                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <button type="button" class="dropdown-item" onclick="imprimirOrdemServico(${Number(ordem.ID_CODIGO)})">
-                                                    <i class="fa-solid fa-print"></i><span> Impresso</span>
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="dropdown-item acao-perigo" onclick="excluirCadastro(${Number(ordem.ID_CODIGO)})">
-                                                    <i class="fa-solid fa-trash"></i><span> Excluir</span>
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </div>
+                    let htmlBotoes = '';
+                    if (usuarioEhAdministradorOS) {
+                        htmlBotoes = `<div class="acoes-linha">
+                            <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar" onclick="editarCadastro(${id})"><i class="fa-solid fa-edit"></i></button>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle" title="Mais ações" aria-label="Mais ações" aria-expanded="false" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><button type="button" class="dropdown-item" onclick="imprimirOrdemServico(${id})"><i class="fa-solid fa-print"></i><span> Impresso</span></button></li>
+                                    <li><button type="button" class="dropdown-item acao-perigo" onclick="excluirCadastro(${id})"><i class="fa-solid fa-trash"></i><span> Excluir</span></button></li>
+                                </ul>
+                            </div>
+                        </div>`;
+                    } else {
+                        htmlBotoes = `<div class="acoes-linha">
+                            <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1" title="Impresso" aria-label="Imprimir ordem de serviço" onclick="imprimirOrdemServico(${id})"><i class="fa-solid fa-print"></i></button>
+                        </div>`;
+                    }
+                    linhas += `<tr>
+                        <td>${id}</td>
+                        <td>${data}</td>
+                        <td>${nome}</td>
+                        <td>${equipamento}</td>
+                        <td>${total}</td>
+                        <td>${htmlBotoes}</td>
+                    </tr>`;
+                    cards += `<div class="card mb-2 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 border-bottom pb-2 mb-2">
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-break">${nome || 'Cliente não informado'}</div>
+                                    <small class="text-secondary">OS #${id}</small>
                                 </div>
-                            </td>
-                        </tr>`;
+                                ${htmlBotoes}
+                            </div>
+                            <div class="row g-2 small">
+                                <div class="col-12"><div class="text-secondary">Data</div><div>${data || '-'}</div></div>
+                                <div class="col-12"><div class="text-secondary">Equipamento</div><div class="text-break">${equipamento || '-'}</div></div>
+                                <div class="col-12"><div class="text-secondary">Total</div><div class="fw-semibold text-success">${total}</div></div>
+                            </div>
+                        </div>
+                    </div>`;
                 });
             }
             $('#tabelaOrdensServico tbody').html(linhas);
+            $('#cardsOrdensServicoMobile').html(cards);
         }
 
         function imprimirOrdemServico(idCodigo){
@@ -386,6 +428,7 @@
         }
 
         function salvarCadastro(){
+            if (!usuarioEhAdministradorOS) return;
             if (!$('#inputDataOrdemServico').val()) {
                 informarAviso('Informe a data da ordem de serviço.');
                 bootstrap.Tab.getOrCreateInstance(document.getElementById('abaDadosTab')).show();
@@ -455,6 +498,7 @@
         }
 
         function editarCadastro(idCodigo){
+            if (!usuarioEhAdministradorOS) return;
             exibirLoading('S');
             requisicaoAjax({
                 type: 'POST',
@@ -501,6 +545,7 @@
         }
 
         function excluirCadastro(idCodigo){
+            if (!usuarioEhAdministradorOS) return;
             Swal.fire({
                 title: 'Realmente deseja excluir a ordem de serviço?',
                 text: 'A ordem será inativada e poderá ser consultada pelo filtro Inativos.',
@@ -641,10 +686,14 @@
         $('#abaValoresTab').on('shown.bs.tab', function(){
             $('#inputDescricaoPecas').trigger('focus');
         });
-        $('#btnNovaOrdemServico').on('click', function(){
+        $('#btnNovaOrdemServico, #btnNovaOrdemServicoMobile').on('click', function(){
             limparCamposModal();
             $('#modalOrdemServico').modal('show');
         });
+        $('#painelFiltrosOrdemServico').on('shown.bs.collapse hidden.bs.collapse', function(){
+            $('#rotuloFiltrosOrdemServico').text($(this).hasClass('show') ? 'Ocultar filtros' : 'Mostrar filtros');
+        });
+
         $('#inputFiltroOrdemServico').on('keyup', function(){
             clearTimeout(temporizadorBusca);
             temporizadorBusca = setTimeout(function(){ paginaAtual = 1; buscarDados(); }, 500);
