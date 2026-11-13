@@ -4,26 +4,46 @@
 @section('page-title', 'Perfis')
 
 @section('content')
+    @php
+        $usuarioAtual = usuarioAutenticado();
+        $idUsuarioAtual = (int) ($usuarioAtual['ID_USUARIO'] ?? 0);
+        $idPerfilAtual = (int) (\Illuminate\Support\Facades\DB::table('usuarios')
+            ->where('ID_USUARIO', $idUsuarioAtual)->value('ID_PERFIL') ?? 0);
+        $descricaoPerfil = (string) (\Illuminate\Support\Facades\DB::table('perfis')
+            ->where('ID_CODIGO', $idPerfilAtual)->value('DESCRICAO') ?? '');
+        $administrador = mb_strtolower(trim($descricaoPerfil), 'UTF-8') === 'administrador';
+    @endphp
     <div>
-        <div>
-            <div class="d-flex gap-2">
-                <div class="input-group flex-grow-1">
-                    <input type="text" class="form-control" placeholder="Buscar perfil" id="inputFiltroPerfil">
-
-                    <label class="input-group-text gap-2" for="checkPesquisarInativos">
-                        <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
-                        <span class="text-nowrap">Inativos</span>
-                    </label>
-                </div>
-
-                <button type="button" class="btn btn-primary text-nowrap" id="btnNovoPerfil">
+        <div class="d-flex justify-content-between align-items-center gap-2 d-lg-none mb-2">
+            <button type="button" class="btn btn-outline-secondary" id="btnAlternarFiltrosPerfil"
+                    data-bs-toggle="collapse" data-bs-target="#painelFiltrosPerfil"
+                    aria-expanded="false" aria-controls="painelFiltrosPerfil">
+                <i class="fa-solid fa-filter me-1"></i><span id="rotuloFiltrosPerfil">Mostrar filtros</span>
+            </button>
+            @if ($administrador)
+                <button type="button" class="btn btn-primary text-nowrap" id="btnNovoPerfilMobile">
                     <i class="fa-solid fa-plus me-1"></i>Novo
                 </button>
+            @endif
+        </div>
+
+        <div id="painelFiltrosPerfil" class="collapse d-lg-block">
+            <div class="d-flex flex-column flex-lg-row align-items-stretch gap-2">
+                <input type="text" class="form-control flex-grow-1" placeholder="Buscar perfil" id="inputFiltroPerfil">
+                <label class="d-flex align-items-center gap-2 px-2 py-2 border rounded" for="checkPesquisarInativos">
+                    <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
+                    <span class="text-nowrap">Pesquisar inativos</span>
+                </label>
+                @if ($administrador)
+                    <button type="button" class="btn btn-primary text-nowrap d-none d-lg-inline-block" id="btnNovoPerfil">
+                        <i class="fa-solid fa-plus me-1"></i>Novo
+                    </button>
+                @endif
             </div>
         </div>
 
         <div class="card mt-2">
-            <div class="table-responsive">
+            <div class="table-responsive d-none d-lg-block">
                 <table class="table table-striped" id="tabelaPerfis" aria-label="Tabela de perfis">
                     <thead>
                         <tr>
@@ -31,7 +51,9 @@
                             <th class="ordenavel" data-coluna="ID_CODIGO" tabindex="0" aria-sort="none" style="width: 5vw;">ID</th>
                             <th class="ordenavel" data-coluna="DESCRICAO" tabindex="0" aria-sort="none" style="width: 35vw;">Descrição</th>
                             <th class="ordenavel" data-coluna="DT_HORA_CADASTRO" tabindex="0" aria-sort="none" style="width: 15vw;">Data Cadastro</th>
+                            @if ($administrador)
                             <th style="width: 10vw;">Ações</th>
+                            @endif
                         </tr>
                     </thead>
 
@@ -39,6 +61,8 @@
                     </tbody>
                 </table>
             </div>
+
+            <div id="cardsPerfisMobile" class="d-lg-none p-2" aria-live="polite"></div>
 
             <div class="card-footer tabela-rodape">
                 <div class="tabela-info" id="infoContagem" aria-live="polite"></div>
@@ -60,6 +84,7 @@
         </div>
     </div>
 
+    @if ($administrador)
     <div class="modal fade" id="modalPerfil" tabindex="-1" aria-labelledby="modalPerfilLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -88,6 +113,7 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -97,6 +123,8 @@
         var registrosPorPagina = 10;
 
         let temporizadorBusca;
+        const usuarioEhAdministrador = @json($administrador);
+        const textoSeguroPerfil = valor => $('<div>').text(valor ?? '').html();
 
         function getFuncaoPadrao() {
             return buscarDados();
@@ -211,56 +239,58 @@
 
         function popularTabelaDados(dados) {
             let linhas = '';
+            let cards = '';
 
             if (!dados || dados.length === 0) {
-                linhas = `
-                    <tr>
-                        <td colspan="6" class="text-center">
-                            Nenhum perfil encontrado.
-                        </td>
-                    </tr>
-                `;
+                linhas = `<tr><td colspan="${usuarioEhAdministrador ? 4 : 3}" class="text-center">Nenhum perfil encontrado.</td></tr>`;
+                cards = '<div class="text-center text-secondary py-4">Nenhum perfil encontrado.</div>';
             } else {
                 dados.forEach(function (perfil) {
-                    var htmlBotoes = `
-                                <div class="acoes-linha">
-                                    <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar"
-                                            onclick="editarCadastro(${perfil.ID_CODIGO})">
-                                        <i class="fa-solid fa-edit"></i>
-                                    </button>
+                    const id = Number(perfil.ID_CODIGO);
+                    const descricao = textoSeguroPerfil(perfil.DESCRICAO);
+                    const dataCadastro = textoSeguroPerfil(aplicarMascaraData(perfil.DT_HORA_CADASTRO));
+                    let htmlBotoes = '';
 
-                                    <div class="dropdown">
-                                        <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle"
-                                                title="Mais ações" aria-label="Mais ações" aria-expanded="false"
-                                                data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'>
-                                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                                        </button>
+                    if (usuarioEhAdministrador) {
+                        htmlBotoes = `<div class="acoes-linha">
+                            <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar"
+                                    onclick="editarCadastro(${id})"><i class="fa-solid fa-edit"></i></button>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle"
+                                        title="Mais ações" aria-label="Mais ações" aria-expanded="false"
+                                        data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'>
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><button type="button" class="dropdown-item acao-perigo" onclick="excluirCadastro(${id})"><i class="fa-solid fa-trash"></i><span>Excluir</span></button></li>
+                                </ul>
+                            </div>
+                        </div>`;
+                    }
 
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <button type="button" class="dropdown-item acao-perigo"
-                                                        onclick="excluirCadastro(${perfil.ID_CODIGO})">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                    <span>Excluir</span>
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>`;
-                    linhas += `
-                        <tr>
-                            <td>${perfil.ID_CODIGO}</td>
-                            <td>${perfil.DESCRICAO ?? ''}</td>
-                            <td>${aplicarMascaraData(perfil.DT_HORA_CADASTRO)}</td>
-                            <td>
+                    linhas += `<tr>
+                        <td>${id}</td><td>${descricao}</td><td>${dataCadastro}</td>
+                        ${usuarioEhAdministrador ? `<td>${htmlBotoes}</td>` : ''}
+                    </tr>`;
+
+                    cards += `<div class="card mb-2 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 border-bottom pb-2 mb-2">
+                                <div class="min-w-0"><div class="fw-semibold text-break">${descricao}</div>
+                                    <small class="text-secondary">Perfil #${id}</small></div>
                                 ${htmlBotoes}
-                            </td>
-                        </tr>
-                    `;
+                            </div>
+                            <div class="small">
+                                <div class="text-secondary">Data cadastro</div>
+                                <div>${dataCadastro || '-'}</div>
+                            </div>
+                        </div>
+                    </div>`;
                 });
             }
 
             $('#tabelaPerfis tbody').html(linhas);
+            $('#cardsPerfisMobile').html(cards);
         }
 
         function limparCamposModal(){
@@ -269,6 +299,7 @@
         }
 
         function salvarCadastro(){
+            if (!usuarioEhAdministrador) return;
             exibirLoading('S');
             var idPerfil = $('#inputIdPerfil').val();
             var descricaoPerfil = $('#inputDescricao').val();
@@ -322,6 +353,7 @@
         }
 
         function editarCadastro(idPerfil){
+            if (!usuarioEhAdministrador) return;
             exibirLoading('S');
 
             requisicaoAjax({
@@ -349,6 +381,7 @@
         }
 
         function excluirCadastro(idPerfil){
+            if (!usuarioEhAdministrador) return;
             Swal.fire({
                 title: 'Realmente deseja inativar o perfil?',
                 icon: 'warning',
@@ -439,7 +472,7 @@
             getFuncaoPadrao();
         });
 
-        $('#btnNovoPerfil').on('click', () => {
+        $('#btnNovoPerfil, #btnNovoPerfilMobile').on('click', () => {
             limparCamposModal();
             $('#modalPerfil').modal('show');
         })
@@ -457,6 +490,10 @@
             paginaAtual = 1;
             buscarDados();
         })
+
+        $('#painelFiltrosPerfil').on('shown.bs.collapse hidden.bs.collapse', function () {
+            $('#rotuloFiltrosPerfil').text($(this).hasClass('show') ? 'Ocultar filtros' : 'Mostrar filtros');
+        });
 
         $(document).ready(function () {
             buscarDados();
