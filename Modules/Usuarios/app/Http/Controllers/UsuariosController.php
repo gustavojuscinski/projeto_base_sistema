@@ -99,6 +99,7 @@ class UsuariosController extends Controller
     }
 
     public function inserirUsuario(Request $request){
+        $this->verificarAdministrador();
         $dadosRecebidos = $request->except('_token');
         $nomeUsuario = $dadosRecebidos['NOME_USUARIO'];
         $senhaUsuario = $dadosRecebidos['SENHA_USUARIO'];
@@ -121,6 +122,7 @@ class UsuariosController extends Controller
     }
 
     public function alterarUsuario(Request $request){
+        $this->verificarAdministrador();
         $dadosRecebidos = $request->except('_token');
         $idUsuario = $dadosRecebidos['ID_USUARIO'];
         $nomeUsuario = $dadosRecebidos['NOME_USUARIO'];
@@ -140,6 +142,7 @@ class UsuariosController extends Controller
     }
 
     public function inativarUsuario(Request $request){
+        $this->verificarAdministrador();
         $dadosRecebidos = $request->except('_token');
         $idUsuario = $dadosRecebidos['ID_USUARIO'];
 
@@ -178,6 +181,7 @@ class UsuariosController extends Controller
     }
 
     public function buscarPermissoesUsuario(Request $request){
+        $this->verificarAdministrador();
         $dadosRecebidos = $request->except('_token');
         $idUsuario = (int) $dadosRecebidos['ID_USUARIO'];
 
@@ -201,6 +205,7 @@ class UsuariosController extends Controller
     }
 
     public function alterarPermissoesUsuario(Request $request){
+        $this->verificarAdministrador();
         $dadosRecebidos = $request->except('_token');
         $idUsuario = $dadosRecebidos['ID_USUARIO'] ?? 0;
         $idPermissao = $dadosRecebidos['ID_PERMISSAO'] ?? 0;
@@ -260,4 +265,13 @@ class UsuariosController extends Controller
 
         return exibirRetorno($result, true, $mensagem);
     }
+    private function verificarAdministrador(): void{
+        $usuario = usuarioAutenticado();
+        $idUsuario = (int) ($usuario['ID_USUARIO'] ?? 0);
+        $idPerfil = (int) DB::table('usuarios')->where('ID_USUARIO', $idUsuario)->value('ID_PERFIL');
+        $perfil = (string) DB::table('perfis')->where('ID_CODIGO', $idPerfil)->value('DESCRICAO');
+
+        abort_unless(mb_strtolower(trim($perfil), 'UTF-8') === 'administrador', 403, 'Acesso permitido apenas para administradores.');
+    }
+
 }
