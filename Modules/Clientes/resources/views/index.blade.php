@@ -4,23 +4,47 @@
 @section('page-title', 'Clientes')
 
 @section('content')
+    @php
+        $usuarioAtual = usuarioAutenticado();
+        $idUsuarioAtual = (int) ($usuarioAtual['ID_USUARIO'] ?? 0);
+        $idPerfilAtual = (int) (\Illuminate\Support\Facades\DB::table('usuarios')
+            ->where('ID_USUARIO', $idUsuarioAtual)->value('ID_PERFIL') ?? 0);
+        $descricaoPerfil = (string) (\Illuminate\Support\Facades\DB::table('perfis')
+            ->where('ID_CODIGO', $idPerfilAtual)->value('DESCRICAO') ?? '');
+        $administrador = mb_strtolower(trim($descricaoPerfil), 'UTF-8') === 'administrador';
+    @endphp
     <div>
-        <div class="d-flex gap-2">
-            <div class="input-group flex-grow-1">
-                <input type="text" class="form-control" placeholder="Buscar cliente, telefone, CPF/CNPJ, e-mail ou cidade" id="inputFiltroCliente">
-                <label class="input-group-text gap-2" for="checkPesquisarInativos">
-                    <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
-                    <span class="text-nowrap">Inativos</span>
-                </label>
-            </div>
-            <button type="button" class="btn btn-primary text-nowrap" id="btnNovoCliente">
-                <i class="fa-solid fa-plus me-1"></i>Novo
+        <div class="d-flex justify-content-between align-items-center gap-2 d-lg-none mb-2">
+            <button type="button" class="btn btn-outline-secondary" id="btnAlternarFiltrosCliente"
+                    data-bs-toggle="collapse" data-bs-target="#painelFiltrosCliente"
+                    aria-expanded="false" aria-controls="painelFiltrosCliente">
+                <i class="fa-solid fa-filter me-1"></i><span id="rotuloFiltrosCliente">Mostrar filtros</span>
             </button>
+            @if ($administrador)
+                <button type="button" class="btn btn-primary text-nowrap" id="btnNovoClienteMobile">
+                    <i class="fa-solid fa-plus me-1"></i>Novo
+                </button>
+            @endif
+        </div>
+
+        <div id="painelFiltrosCliente" class="collapse d-lg-block">
+            <div class="d-flex flex-column flex-lg-row align-items-stretch gap-2">
+                <input type="text" class="form-control flex-grow-1" placeholder="Buscar cliente, telefone, CPF/CNPJ, e-mail ou cidade" id="inputFiltroCliente">
+                <label class="d-flex align-items-center gap-2 px-2 py-2 border rounded" for="checkPesquisarInativos">
+                    <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
+                    <span class="text-nowrap">Pesquisar inativos</span>
+                </label>
+                @if ($administrador)
+                    <button type="button" class="btn btn-primary text-nowrap d-none d-lg-inline-block" id="btnNovoCliente">
+                        <i class="fa-solid fa-plus me-1"></i>Novo
+                    </button>
+                @endif
+            </div>
         </div>
 
         <div class="card mt-2">
-            <div class="table-responsive">
-                <table class="table table-striped" id="tabelaClientes">
+            <div class="table-responsive d-none d-lg-block">
+                <table class="table table-striped" id="tabelaClientes" aria-label="Tabela de clientes">
                     <thead>
                         <tr>
                             <th class="ordenavel" data-coluna="ID_CODIGO" tabindex="0" aria-sort="none">ID</th>
@@ -29,12 +53,15 @@
                             <th>E-mail</th>
                             <th class="ordenavel" data-coluna="CIDADE" tabindex="0" aria-sort="none">Cidade/UF</th>
                             <th class="ordenavel" data-coluna="DT_HORA_CADASTRO" tabindex="0" aria-sort="none">Cadastro</th>
-                            <th>Ações</th>
+                            @if ($administrador)
+                                <th>Ações</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
+            <div id="cardsClientesMobile" class="d-lg-none p-2" aria-live="polite"></div>
             <div class="card-footer tabela-rodape">
                 <div class="tabela-info" id="infoContagem" aria-live="polite"></div>
                 <nav class="tabela-paginacao" aria-label="Paginação da lista">
@@ -53,6 +80,7 @@
         </div>
     </div>
 
+    @if ($administrador)
     <div class="modal fade" id="modalCliente" tabindex="-1" aria-labelledby="modalClienteLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -120,6 +148,7 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -128,6 +157,7 @@
         var paginaAtual = 1;
         var registrosPorPagina = 10;
         let temporizadorBusca;
+        const usuarioEhAdministradorCliente = @json($administrador);
 
         function getFuncaoPadrao(){
             return buscarDados();
@@ -211,21 +241,23 @@
 
         function popularTabelaDados(dados){
             let linhas = '';
+            let cards = '';
             if (!dados || dados.length === 0) {
-                linhas = '<tr><td colspan="7" class="text-center">Nenhum cliente encontrado.</td></tr>';
+                linhas = `<tr><td colspan="${usuarioEhAdministradorCliente ? 7 : 6}" class="text-center">Nenhum cliente encontrado.</td></tr>`;
+                cards = '<div class="text-center text-secondary py-4">Nenhum cliente encontrado.</div>';
             } else {
                 dados.forEach(function(cliente){
                     const id = Number(cliente.ID_CODIGO);
-                    const cidadeUf = [cliente.CIDADE, cliente.ESTADO].filter(Boolean).join(' / ');
-                    linhas += `<tr>
-                        <td>${id}</td>
-                        <td>${escaparHtml(cliente.NOME)}</td>
-                        <td>${escaparHtml(cliente.TELEFONE)}</td>
-                        <td>${escaparHtml(cliente.EMAIL)}</td>
-                        <td>${escaparHtml(cidadeUf)}</td>
-                        <td>${cliente.DT_HORA_CADASTRO ? aplicarMascaraData(cliente.DT_HORA_CADASTRO) : ''}</td>
-                        <td><div class="acoes-linha">
-                            <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar" onclick="editarCadastro(${id})">
+                    const nome = escaparHtml(cliente.NOME);
+                    const telefone = escaparHtml(cliente.TELEFONE) || '-';
+                    const email = escaparHtml(cliente.EMAIL) || '-';
+                    const cidadeUf = escaparHtml([cliente.CIDADE, cliente.ESTADO].filter(Boolean).join(' / ')) || '-';
+                    const dataCadastro = cliente.DT_HORA_CADASTRO ? escaparHtml(aplicarMascaraData(cliente.DT_HORA_CADASTRO)) : '-';
+                    let htmlBotoes = '';
+
+                    if (usuarioEhAdministradorCliente) {
+                        htmlBotoes = `<div class="acoes-linha">
+                            <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar" aria-label="Editar cliente" onclick="editarCadastro(${id})">
                                 <i class="fa-solid fa-edit"></i>
                             </button>
                             <div class="dropdown">
@@ -240,11 +272,35 @@
                                     </button></li>
                                 </ul>
                             </div>
-                        </div></td>
+                        </div>`;
+                    }
+
+                    linhas += `<tr>
+                        <td>${id}</td><td>${nome}</td><td>${telefone}</td><td>${email}</td>
+                        <td>${cidadeUf}</td><td>${dataCadastro}</td>
+                        ${usuarioEhAdministradorCliente ? `<td>${htmlBotoes}</td>` : ''}
                     </tr>`;
+                    cards += `<div class="card mb-2 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 border-bottom pb-2 mb-2">
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-break">${nome}</div>
+                                    <small class="text-secondary">Cliente #${id}</small>
+                                </div>
+                                ${htmlBotoes}
+                            </div>
+                            <div class="row g-2 small">
+                                <div class="col-12"><div class="text-secondary">Telefone</div><div class="text-break">${telefone}</div></div>
+                                <div class="col-12"><div class="text-secondary">E-mail</div><div class="text-break">${email}</div></div>
+                                <div class="col-12"><div class="text-secondary">Cidade/UF</div><div class="text-break">${cidadeUf}</div></div>
+                                <div class="col-12"><div class="text-secondary">Data cadastro</div><div>${dataCadastro}</div></div>
+                            </div>
+                        </div>
+                    </div>`;
                 });
             }
             $('#tabelaClientes tbody').html(linhas);
+            $('#cardsClientesMobile').html(cards);
         }
 
         function limparCamposModal(){
@@ -252,6 +308,7 @@
         }
 
         function salvarCadastro(){
+            if (!usuarioEhAdministradorCliente) return;
             const nome = $('#inputNome').val().trim();
             const telefone = $('#inputTelefone').val().trim();
             if (!nome || !telefone) {
@@ -304,6 +361,7 @@
         }
 
         function editarCadastro(idCliente){
+            if (!usuarioEhAdministradorCliente) return;
             exibirLoading('S');
             requisicaoAjax({
                 type: 'POST',
@@ -336,6 +394,7 @@
         }
 
         function excluirCadastro(idCliente){
+            if (!usuarioEhAdministradorCliente) return;
             Swal.fire({
                 title: 'Realmente deseja inativar o cliente?',
                 icon: 'warning',
@@ -427,7 +486,7 @@
             paginaAtual = 1;
             buscarDados();
         });
-        $('#btnNovoCliente').on('click', function(){
+        $('#btnNovoCliente, #btnNovoClienteMobile').on('click', function(){
             limparCamposModal();
             $('#modalClienteLabel').text('Novo cliente');
             $('#modalCliente').modal('show');
@@ -435,6 +494,10 @@
         $('#modalCliente').on('shown.bs.modal', function(){
             $('#inputCep').trigger('focus');
         });
+        $('#painelFiltrosCliente').on('shown.bs.collapse hidden.bs.collapse', function(){
+            $('#rotuloFiltrosCliente').text($(this).hasClass('show') ? 'Ocultar filtros' : 'Mostrar filtros');
+        });
+
         $('#inputFiltroCliente').on('input', function(){
             clearTimeout(temporizadorBusca);
             temporizadorBusca = setTimeout(function(){
