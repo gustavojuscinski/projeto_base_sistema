@@ -4,22 +4,46 @@
 @section('page-title', 'Vendedores')
 
 @section('content')
+    @php
+        $usuarioAtual = usuarioAutenticado();
+        $idUsuarioAtual = (int) ($usuarioAtual['ID_USUARIO'] ?? 0);
+        $idPerfilAtual = (int) (\Illuminate\Support\Facades\DB::table('usuarios')
+            ->where('ID_USUARIO', $idUsuarioAtual)->value('ID_PERFIL') ?? 0);
+        $descricaoPerfil = (string) (\Illuminate\Support\Facades\DB::table('perfis')
+            ->where('ID_CODIGO', $idPerfilAtual)->value('DESCRICAO') ?? '');
+        $administrador = mb_strtolower(trim($descricaoPerfil), 'UTF-8') === 'administrador';
+    @endphp
     <div>
-        <div class="d-flex gap-2">
-            <div class="input-group flex-grow-1">
-                <input type="text" class="form-control" placeholder="Buscar vendedor, usuário ou filial" id="inputFiltroVendedor">
-                <label class="input-group-text gap-2" for="checkPesquisarInativos">
-                    <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
-                    <span class="text-nowrap">Inativos</span>
-                </label>
-            </div>
-            <button type="button" class="btn btn-primary text-nowrap" id="btnNovoVendedor">
-                <i class="fa-solid fa-plus me-1"></i>Novo
+        <div class="d-flex justify-content-between align-items-center gap-2 d-lg-none mb-2">
+            <button type="button" class="btn btn-outline-secondary" id="btnAlternarFiltrosVendedor"
+                    data-bs-toggle="collapse" data-bs-target="#painelFiltrosVendedor"
+                    aria-expanded="false" aria-controls="painelFiltrosVendedor">
+                <i class="fa-solid fa-filter me-1"></i><span id="rotuloFiltrosVendedor">Mostrar filtros</span>
             </button>
+            @if ($administrador)
+                <button type="button" class="btn btn-primary text-nowrap" id="btnNovoVendedorMobile">
+                    <i class="fa-solid fa-plus me-1"></i>Novo
+                </button>
+            @endif
+        </div>
+
+        <div id="painelFiltrosVendedor" class="collapse d-lg-block">
+            <div class="d-flex flex-column flex-lg-row align-items-stretch gap-2">
+                <input type="text" class="form-control flex-grow-1" placeholder="Buscar vendedor, usuário ou filial" id="inputFiltroVendedor">
+                <label class="d-flex align-items-center gap-2 px-2 py-2 border rounded" for="checkPesquisarInativos">
+                    <input type="checkbox" class="form-check-input m-0" id="checkPesquisarInativos">
+                    <span class="text-nowrap">Pesquisar inativos</span>
+                </label>
+                @if ($administrador)
+                    <button type="button" class="btn btn-primary text-nowrap d-none d-lg-inline-block" id="btnNovoVendedor">
+                        <i class="fa-solid fa-plus me-1"></i>Novo
+                    </button>
+                @endif
+            </div>
         </div>
 
         <div class="card mt-2">
-            <div class="table-responsive">
+            <div class="table-responsive d-none d-lg-block">
                 <table class="table table-striped" id="tabelaVendedores" aria-label="Tabela de vendedores">
                     <thead>
                         <tr>
@@ -28,12 +52,15 @@
                             <th class="ordenavel" data-coluna="NOME_USUARIO" tabindex="0" aria-sort="none">Usuário</th>
                             <th class="ordenavel" data-coluna="DESCRICAO_FILIAL" tabindex="0" aria-sort="none">Filial</th>
                             <th class="ordenavel" data-coluna="QTDE_HORARIOS" tabindex="0" aria-sort="none">Horários</th>
-                            <th>Ações</th>
+                            @if ($administrador)
+                                <th>Ações</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
+            <div id="cardsVendedoresMobile" class="d-lg-none p-2" aria-live="polite"></div>
             <div class="card-footer tabela-rodape">
                 <div class="tabela-info" id="infoContagem" aria-live="polite"></div>
                 <nav class="tabela-paginacao" aria-label="Paginação da lista">
@@ -50,6 +77,7 @@
         </div>
     </div>
 
+    @if ($administrador)
     <div class="modal fade" id="modalVendedor" tabindex="-1" aria-labelledby="modalVendedorLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -127,6 +155,7 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -135,6 +164,7 @@
         var paginaAtual = 1;
         var registrosPorPagina = 10;
         let temporizadorBusca;
+        const usuarioEhAdministradorVendedor = @json($administrador);
         const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
         function textoSeguro(valor) {
@@ -208,19 +238,21 @@
         }
 
         function popularTabelaDados(dados){
-            let linhas='';
+            let linhas = '';
+            let cards = '';
             if (!dados.length) {
-                linhas='<tr><td colspan="6" class="text-center">Nenhum vendedor encontrado.</td></tr>';
+                linhas = `<tr><td colspan="${usuarioEhAdministradorVendedor ? 6 : 5}" class="text-center">Nenhum vendedor encontrado.</td></tr>`;
+                cards = '<div class="text-center text-secondary py-4">Nenhum vendedor encontrado.</div>';
             } else {
                 dados.forEach(function(vendedor){
-                    const id=Number(vendedor.ID_VENDEDOR);
-                    linhas += `<tr>
-                        <td>${id}</td>
-                        <td>${textoSeguro(vendedor.NOME_VENDEDOR)}</td>
-                        <td>${textoSeguro(vendedor.NOME_USUARIO)}</td>
-                        <td>${textoSeguro(vendedor.DESCRICAO_FILIAL)}</td>
-                        <td>${Number(vendedor.QTDE_HORARIOS)||0}</td>
-                        <td><div class="acoes-linha">
+                    const id = Number(vendedor.ID_VENDEDOR);
+                    const nome = textoSeguro(vendedor.NOME_VENDEDOR);
+                    const usuario = textoSeguro(vendedor.NOME_USUARIO) || '-';
+                    const filial = textoSeguro(vendedor.DESCRICAO_FILIAL) || '-';
+                    const horarios = Number(vendedor.QTDE_HORARIOS) || 0;
+                    let htmlBotoes = '';
+                    if (usuarioEhAdministradorVendedor) {
+                        htmlBotoes = `<div class="acoes-linha">
                             <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar" onclick="editarCadastro(${id})"><i class="fa-solid fa-edit"></i></button>
                             <div class="dropdown">
                                 <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle" title="Mais ações" aria-label="Mais ações" aria-expanded="false" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'><i class="fa-solid fa-ellipsis-vertical"></i></button>
@@ -229,11 +261,33 @@
                                     <li><button type="button" class="dropdown-item acao-perigo" onclick="excluirCadastro(${id})"><i class="fa-solid fa-trash me-1"></i>Excluir</button></li>
                                 </ul>
                             </div>
-                        </div></td>
+                        </div>`;
+                    }
+                    linhas += `<tr>
+                        <td>${id}</td><td>${nome}</td><td>${usuario}</td>
+                        <td>${filial}</td><td>${horarios}</td>
+                        ${usuarioEhAdministradorVendedor ? `<td>${htmlBotoes}</td>` : ''}
                     </tr>`;
+                    cards += `<div class="card mb-2 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 border-bottom pb-2 mb-2">
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-break">${nome}</div>
+                                    <small class="text-secondary">Vendedor #${id}</small>
+                                </div>
+                                ${htmlBotoes}
+                            </div>
+                            <div class="row g-2 small">
+                                <div class="col-12"><div class="text-secondary">Usuário vinculado</div><div class="text-break">${usuario}</div></div>
+                                <div class="col-8"><div class="text-secondary">Filial</div><div class="text-break">${filial}</div></div>
+                                <div class="col-4"><div class="text-secondary">Horários</div><div>${horarios}</div></div>
+                            </div>
+                        </div>
+                    </div>`;
                 });
             }
             $('#tabelaVendedores tbody').html(linhas);
+            $('#cardsVendedoresMobile').html(cards);
         }
 
         function limparCamposModal(){
@@ -266,6 +320,7 @@
         }
 
         function salvarCadastro(){
+            if (!usuarioEhAdministradorVendedor) return;
             const idVendedor=Number($('#inputIdVendedor').val())||0;
             const nome=$('#inputNomeVendedor').val().trim();
             if(!nome){ informarAviso('Informe o nome do vendedor.'); return; }
@@ -286,6 +341,7 @@
         }
 
         function editarCadastro(idVendedor){
+            if (!usuarioEhAdministradorVendedor) return;
             exibirLoading('S');
             requisicaoAjax({type:'POST',dataType:'json',
                 data:{'_token':'{{ csrf_token() }}','ID_VENDEDOR':idVendedor},
@@ -305,6 +361,7 @@
         }
 
         function excluirCadastro(idVendedor){
+            if (!usuarioEhAdministradorVendedor) return;
             Swal.fire({title:'Realmente deseja inativar o vendedor?',icon:'warning',showCancelButton:true,
                 confirmButtonText:'Sim, inativar',cancelButtonText:'Cancelar',confirmButtonColor:'#d33',cancelButtonColor:'#6c757d'
             }).then(function(resultado){
@@ -320,6 +377,7 @@
         }
 
         function visualizarHorarios(idVendedor){
+            if (!usuarioEhAdministradorVendedor) return;
             const nomeVendedor = $('#tabelaVendedores tbody tr').filter(function(){
                 return Number($(this).find('td:first').text()) === Number(idVendedor);
             }).find('td:eq(1)').text();
@@ -351,6 +409,7 @@
         }
 
         function inserirHorario(){
+            if (!usuarioEhAdministradorVendedor) return;
             const idVendedor=$('#inputIdVendedorHorarios').val();
             const diaSemana=$('#selectDiaSemana').val();
             const horaInicio=$('#inputHoraInicio').val();
@@ -370,6 +429,7 @@
         }
 
         function excluirHorario(idHorario){
+            if (!usuarioEhAdministradorVendedor) return;
             Swal.fire({title:'Deseja excluir este horário?',icon:'warning',showCancelButton:true,
                 confirmButtonText:'Sim, excluir',cancelButtonText:'Cancelar'
             }).then(function(resultado){
@@ -385,7 +445,7 @@
 
         $('#btnInserirHorario').on('click',inserirHorario);
 
-        $('#btnNovoVendedor').on('click',function(){
+        $('#btnNovoVendedor, #btnNovoVendedorMobile').on('click',function(){
             limparCamposModal();$('#modalVendedorLabel').text('Novo vendedor');
             buscarUsuarios();buscarFiliais();$('#modalVendedor').modal('show');
         });
@@ -414,6 +474,10 @@
             registrosPorPagina=Number($(this).val());
             paginaAtual=1;
             buscarDados();
+        });
+
+        $('#painelFiltrosVendedor').on('shown.bs.collapse hidden.bs.collapse', function () {
+            $('#rotuloFiltrosVendedor').text($(this).hasClass('show') ? 'Ocultar filtros' : 'Mostrar filtros');
         });
 
         $('#inputFiltroVendedor').on('input',function(){
