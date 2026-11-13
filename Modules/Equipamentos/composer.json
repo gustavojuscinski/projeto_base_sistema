@@ -1,0 +1,10 @@
+{
+    "name": "local/equipamentos",
+    "description": "Módulo Equipamentos",
+    "type": "laravel-module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Equipamentos\\": "app/"
+        }
+    }
+}

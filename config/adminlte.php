@@ -83,6 +83,12 @@ return [
                         'route' => 'ordem-servico.index',
                         'can' => 'WEB_MENU_ORDEM_SERVICO',
                     ],
+                    [
+                        'label' => 'Equipamentos',
+                        'icon' => 'fa-solid fa-laptop',
+                        'route' => 'equipamentos.index',
+                        // 'can' => 'WEB_MENU_EQUIPAMENTO',
+                    ],
                 ],
             ],
         ],

@@ -8,5 +8,6 @@
     "Vendedores": true,
     "Filiais": true,
     "OrdemServico": true,
-    "Clientes": true
+    "Clientes": true,
+    "Equipamentos": true
 }

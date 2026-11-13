@@ -1,0 +1,11 @@
+{
+    "name": "Equipamentos",
+    "alias": "equipamentos",
+    "description": "Cadastro de equipamentos para ordens de serviço",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Equipamentos\\Providers\\EquipamentosServiceProvider"
+    ],
+    "files": []
+}
