@@ -87,7 +87,7 @@ return [
                         'label' => 'Equipamentos',
                         'icon' => 'fa-solid fa-laptop',
                         'route' => 'equipamentos.index',
-                        // 'can' => 'WEB_MENU_EQUIPAMENTO',
+                        'can' => 'WEB_MENU_EQUIPAMENTO',
                     ],
                 ],
             ],
