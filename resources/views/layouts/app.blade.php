@@ -29,6 +29,11 @@
         <nav class="app-header navbar navbar-expand m-0 p-0">
             <div class="container-fluid">
 
+                <button type="button" class="btn navbar-botao-menu d-lg-none" id="btnMenuMobile"
+                        aria-controls="sidebarPrincipal" aria-expanded="false" aria-label="Abrir menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
                 <h3 class="navbar-titulo">
                     @yield('page-title', config('adminlte.title', config('app.name', 'Sistema')))
                 </h3>
@@ -66,7 +71,7 @@
         </nav>
 
         {{-- Sidebar (removido bg-body-secondary: o grafite vem do style.css) --}}
-        <aside class="app-sidebar shadow" data-bs-theme="dark">
+        <aside class="app-sidebar shadow" id="sidebarPrincipal" data-bs-theme="dark">
             <div class="sidebar-brand">
                 <a href="{{ route('home') }}" class="" title="Ir para a Home" aria-label="Brasa - Ir para a Home">
                     <img src="{{ asset('img/logo-brasa-branca.png') }}" alt="Brasa" width="30">
@@ -176,6 +181,9 @@
             </div>
         </aside>
 
+        <button type="button" class="sidebar-mobile-overlay" id="overlayMenuMobile"
+                aria-label="Fechar menu de navegação" tabindex="-1"></button>
+
         {{-- Conteúdo --}}
         <main class="app-main">
             {{-- Faixa branca: breadcrumb à esquerda, ações da página à direita --}}
@@ -254,6 +262,37 @@
             sessionStorage.removeItem('bemVindo');
         }
     </script>  
+
+    <script>
+        (function () {
+            const botao = document.getElementById('btnMenuMobile');
+            const overlay = document.getElementById('overlayMenuMobile');
+            const sidebar = document.getElementById('sidebarPrincipal');
+            const mobile = window.matchMedia('(max-width: 991.98px)');
+            if (!botao || !overlay || !sidebar) return;
+
+            function fecharMenu() {
+                document.body.classList.remove('menu-mobile-aberto');
+                botao.setAttribute('aria-expanded', 'false');
+                botao.setAttribute('aria-label', 'Abrir menu');
+            }
+
+            botao.addEventListener('click', function () {
+                const abrir = !document.body.classList.contains('menu-mobile-aberto');
+                document.body.classList.toggle('menu-mobile-aberto', abrir);
+                botao.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+                botao.setAttribute('aria-label', abrir ? 'Fechar menu' : 'Abrir menu');
+            });
+            overlay.addEventListener('click', fecharMenu);
+            document.addEventListener('keydown', function (evento) {
+                if (evento.key === 'Escape') fecharMenu();
+            });
+            sidebar.addEventListener('click', function (evento) {
+                if (mobile.matches && evento.target.closest('a[href]:not([href="#"])')) fecharMenu();
+            });
+            mobile.addEventListener('change', fecharMenu);
+        })();
+    </script>
 
     @stack('scripts')
     <script>
