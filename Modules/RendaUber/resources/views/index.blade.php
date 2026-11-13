@@ -5,41 +5,55 @@
 
 @section('content')
     <div>
-        <div class="d-flex align-items-center gap-1">
-            <div class="input-group flex-grow-1" style="min-width: 0;">
-                <input type="text" class="form-control" placeholder="Buscar origem ou destino" id="inputFiltroRenda">
-            </div>
-
-            <div class="btn-group flex-shrink-0" role="group" aria-label="Período de rendas">
-                <button type="button" class="btn btn-outline-secondary btn-periodo" style="width: 85px;" data-periodo="diario" aria-pressed="false">
-                    Diário
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-periodo" style="width: 85px;" data-periodo="semanal" aria-pressed="false">
-                    Semanal
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-periodo active" style="width: 85px;" data-periodo="mensal" aria-pressed="true">
-                    Mensal
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-periodo" style="width: 85px;" data-periodo="personalizado" aria-pressed="false">
-                    Período
-                </button>
-            </div>
-
-            <div class="d-flex align-items-center gap-2 flex-shrink-0" id="filtrosDatas">
-                <input type="date" class="form-control" id="inputDataInicial" aria-label="Data inicial" style="width: 145px;">
-                <span>até</span>
-                <input type="date" class="form-control" id="inputDataFinal" aria-label="Data final" style="width: 145px;">
-
-                <button type="button" class="btn btn-primary" id="btnAplicarPeriodo" title="Aplicar período">
-                    <i class="fa-solid fa-magnifying-glass me-1"></i>Buscar
-                </button>
-            </div>
-
-            <button type="button" class="btn btn-primary text-nowrap flex-shrink-0" id="btnNovaRenda">
+        <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+            <button type="button" class="btn btn-outline-secondary d-lg-none" id="btnRecolherFiltros"
+                    data-bs-toggle="collapse" data-bs-target="#painelFiltrosRenda"
+                    aria-controls="painelFiltrosRenda" aria-expanded="true">
+                <i class="fa-solid fa-filter me-1"></i><span>Ocultar filtros</span>
+                <i class="fa-solid fa-chevron-up ms-1"></i>
+            </button>
+            <button type="button" class="btn btn-primary text-nowrap ms-auto" id="btnNovaRenda">
                 <i class="fa-solid fa-plus me-1"></i>Novo
             </button>
         </div>
 
+        <div class="collapse show" id="painelFiltrosRenda">
+            <div class="card mb-2">
+                <div class="card-body p-2">
+                    <div class="filtros-renda-grid">
+                        <div class="filtro-busca-renda">
+                            <label for="inputFiltroRenda" class="form-label mb-1">Localizar</label>
+                            <input type="text" class="form-control" placeholder="Buscar origem ou destino" id="inputFiltroRenda">
+                        </div>
+
+                        <div class="filtro-periodo-renda">
+                            <label class="form-label mb-1 d-block">Período</label>
+                            <div class="btn-group w-100" role="group" aria-label="Período de rendas">
+                                <button type="button" class="btn btn-outline-secondary btn-periodo" data-periodo="diario" aria-pressed="false">Diário</button>
+                                <button type="button" class="btn btn-outline-secondary btn-periodo" data-periodo="semanal" aria-pressed="false">Semanal</button>
+                                <button type="button" class="btn btn-outline-secondary btn-periodo active" data-periodo="mensal" aria-pressed="true">Mensal</button>
+                                <button type="button" class="btn btn-outline-secondary btn-periodo" data-periodo="personalizado" aria-pressed="false">Período</button>
+                            </div>
+                        </div>
+
+                        <div class="filtro-datas-renda" id="filtrosDatas">
+                            <div>
+                                <label for="inputDataInicial" class="form-label mb-1">Data inicial</label>
+                                <input type="date" class="form-control w-100" id="inputDataInicial">
+                            </div>
+                            <div>
+                                <label for="inputDataFinal" class="form-label mb-1">Data final</label>
+                                <input type="date" class="form-control w-100" id="inputDataFinal">
+                            </div>
+                        </div>
+                        <div class="filtro-botao-renda">
+                            <button type="button" class="btn btn-primary w-100" id="btnAplicarPeriodo">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         <div class="row g-1 mt-1">
             <div class="col-6 col-md-4 col-xl-2"><div class="card h-100 mb-0"><div class="card-body py-2"><small class="text-secondary">Total Bruto</small><div class="fs-5 fw-bold" id="resumoBruto">R$ 0,00</div></div></div></div>
             <div class="col-6 col-md-4 col-xl-2"><div class="card h-100 mb-0"><div class="card-body py-2"><small class="text-secondary">Descontos</small><div class="fs-5 fw-bold text-danger" id="resumoDescontos">R$ 0,00</div></div></div></div>
@@ -49,8 +63,10 @@
             <div class="col-6 col-md-4 col-xl-2"><div class="card h-100 mb-0"><div class="card-body py-2"><small class="text-secondary">Distância Total</small><div class="fs-5 fw-bold" id="resumoDistancia">0 km</div></div></div></div>
         </div>
 
+        </div>
+
         <div class="card mt-2">
-            <div class="table-responsive">
+            <div class="table-responsive rendas-tabela-desktop">
                 <table class="table table-striped" id="tabelaRendas" aria-label="Tabela de rendas Uber">
                     <thead>
                         <tr>
@@ -69,6 +85,7 @@
                     <tbody></tbody>
                 </table>
             </div>
+            <div id="cardsRendasMobile" class="rendas-cards-mobile p-2" aria-label="Corridas em formato de cards"></div>
             <div class="card-footer tabela-rodape">
                 <div class="tabela-info" id="infoContagem" aria-live="polite"></div>
                 <nav class="tabela-paginacao" aria-label="Paginação da lista"><ul class="pagination pagination-sm mb-0" id="paginacaoLista"></ul></nav>
@@ -121,6 +138,38 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+@endpush
+
+@push('styles')
+<style>
+    .filtros-renda-grid { display: grid; grid-template-columns: minmax(190px, 1fr) auto auto auto; gap: .6rem; align-items: end; }
+    .filtro-periodo-renda .btn { white-space: nowrap; }
+    .filtro-datas-renda { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr); gap: .5rem; }
+    .rendas-cards-mobile { display: none; }
+    @media (max-width: 1199.98px) {
+        .filtros-renda-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .filtro-datas-renda { min-width: 0; }
+    }
+    @media (max-width: 991.98px) {
+        .filtros-renda-grid { display: flex; flex-direction: column; align-items: stretch; gap: .7rem; }
+        .filtro-periodo-renda .btn { min-width: 0; padding: .55rem .3rem; font-size: .82rem; }
+        .filtro-datas-renda { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+        .filtro-datas-renda .form-control { min-width: 0; padding-left: .35rem; padding-right: .2rem; font-size: .84rem; }
+        .rendas-tabela-desktop { display: none; }
+        .rendas-cards-mobile { display: block; }
+        .renda-card-mobile { overflow: visible; }
+        .renda-trajeto { display: grid; gap: .5rem; }
+        .renda-trajeto-linha { display: flex; align-items: flex-start; gap: .5rem; overflow-wrap: anywhere; }
+        .renda-trajeto-linha i { flex: 0 0 16px; padding-top: .25rem; text-align: center; }
+        .renda-trajeto-linha span { min-width: 0; }
+        .renda-card-detalhes { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; }
+        .renda-card-detalhes > div { display: flex; flex-direction: column; padding: .45rem .55rem; background: var(--superficie-2); border-radius: var(--raio); min-width: 0; }
+        .renda-card-detalhes strong { overflow-wrap: anywhere; }
+        #tabelaRendas { width: 100%; }
+        .tabela-rodape { grid-template-columns: 1fr; text-align: center; }
+        .tabela-rodape .tabela-info,.tabela-rodape .tabela-paginacao,.tabela-rodape .tabela-por-pagina { justify-self: center; }
+    }
+</style>
 @endpush
 
 @push('scripts')
@@ -235,7 +284,9 @@
 
     function popularTabelaDados(dados){
         let linhas = '';
+        let cards = '';
         if (!dados.length) {
+            cards = '<div class="text-center text-secondary py-4">Nenhuma corrida encontrada.</div>';
             linhas = '<tr><td colspan="10" class="text-center">Nenhuma corrida encontrada.</td></tr>';
         } else {
             dados.forEach(function(renda){
@@ -247,6 +298,31 @@
                         <li><button type="button" class="dropdown-item" onclick="visualizarCadastro(${id})"><i class="fa-solid fa-eye"></i><span>Visualizar</span></button></li>
                         <li><button type="button" class="dropdown-item acao-perigo" onclick="excluirCadastro(${id})"><i class="fa-solid fa-trash"></i><span>Excluir</span></button></li>
                     </ul></div></div>`;
+                cards += `<article class="card renda-card-mobile mb-2" aria-label="Corrida ${id}">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                            <div>
+                                <div class="text-secondary small">Corrida #${id}</div>
+                                <div class="fw-semibold">${textoSeguro(dataExibicao(renda.DT_HORA_CORRIDA))}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-secondary small">Valor líquido</div>
+                                <div class="fw-bold text-success fs-5">${moeda(renda.VALOR_LIQUIDO)}</div>
+                            </div>
+                        </div>
+                        <div class="renda-trajeto mb-2">
+                            <div class="renda-trajeto-linha"><i class="fa-solid fa-circle-dot text-success" aria-hidden="true"></i><span><strong>Origem:</strong> ${textoSeguro(renda.ENDERECO_ORIGEM) || '—'}</span></div>
+                            <div class="renda-trajeto-linha"><i class="fa-solid fa-location-dot text-danger" aria-hidden="true"></i><span><strong>Destino:</strong> ${textoSeguro(renda.ENDERECO_DESTINO) || '—'}</span></div>
+                        </div>
+                        <div class="renda-card-detalhes mb-3">
+                            <div><span class="text-secondary small">Duração</span><strong>${numero(renda.DURACAO)} min</strong></div>
+                            <div><span class="text-secondary small">Distância</span><strong>${numero(renda.DISTANCIA)} km</strong></div>
+                            <div><span class="text-secondary small">Bruto</span><strong>${moeda(renda.VALOR_BRUTO)}</strong></div>
+                            <div><span class="text-secondary small">Descontos</span><strong class="text-danger">${moeda(renda.TOTAL_DESCONTO)}</strong></div>
+                        </div>
+                        <div class="d-flex justify-content-end border-top pt-2">${botoes}</div>
+                    </div>
+                </article>`;
                 linhas += `<tr>
                     <td>${id}</td><td>${textoSeguro(dataExibicao(renda.DT_HORA_CORRIDA))}</td>
                     <td>${textoSeguro(renda.ENDERECO_ORIGEM)}</td><td>${textoSeguro(renda.ENDERECO_DESTINO)}</td>
@@ -257,6 +333,7 @@
             });
         }
         $('#tabelaRendas tbody').html(linhas);
+        $('#cardsRendasMobile').html(cards);
     }
 
     function limparCamposModal(){
@@ -625,6 +702,14 @@
         buscarDados();
     });
     
+    $('#painelFiltrosRenda').on('shown.bs.collapse hidden.bs.collapse', function () {
+        const aberto = $(this).hasClass('show');
+        $('#btnRecolherFiltros span').text(aberto ? 'Ocultar filtros' : 'Mostrar filtros');
+        $('#btnRecolherFiltros .fa-chevron-up, #btnRecolherFiltros .fa-chevron-down')
+            .toggleClass('fa-chevron-up', aberto).toggleClass('fa-chevron-down', !aberto);
+        $('#btnRecolherFiltros').attr('aria-expanded', aberto ? 'true' : 'false');
+    });
+
     $(document).ready(function(){ 
         atualizarDatas(); 
         buscarDados();
