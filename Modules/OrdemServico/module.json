@@ -1,0 +1,11 @@
+{
+    "name": "OrdemServico",
+    "alias": "ordemservico",
+    "description": "Cadastro e gerenciamento de ordens de serviço",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\OrdemServico\\Providers\\OrdemServicoServiceProvider"
+    ],
+    "files": []
+}

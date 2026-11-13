@@ -1,0 +1,10 @@
+{
+    "name": "local/clientes",
+    "description": "Módulo de Clientes",
+    "type": "laravel-module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Clientes\\": ""
+        }
+    }
+}

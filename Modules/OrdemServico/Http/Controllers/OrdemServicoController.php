@@ -1,0 +1,224 @@
+<?php
+
+namespace Modules\OrdemServico\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\OrdemServico\Support\Loader;
+
+class OrdemServicoController extends Controller
+{
+    public function index(){
+        return view('ordemservico::index');
+    }
+
+    public function buscarOrdensServico(Request $request){
+        $dadosRecebidos = $request->except('_token');
+        $filtroBusca = '';
+        $filtroOrdem = '';
+        $filtroLimite = '';
+        $filtroStatus = !empty($dadosRecebidos['INATIVOS']) ? "AND STATUS = 'I'" : "AND STATUS = 'A'";
+
+        if (!empty($dadosRecebidos['ID_CODIGO'])) {
+            $filtroOrdem = 'AND ID_CODIGO = ' . (int) $dadosRecebidos['ID_CODIGO'];
+        }
+
+        if (!empty($dadosRecebidos['FILTRO_BUSCA'])) {
+            $termoBusca = DB::getPdo()->quote('%' . $dadosRecebidos['FILTRO_BUSCA'] . '%');
+            $filtroBusca = "AND (NOME_CLIENTE LIKE $termoBusca OR TELEFONE_CLIENTE LIKE $termoBusca OR MARCA_EQUIPAMENTO LIKE $termoBusca OR MODELO_EQUIPAMENTO LIKE $termoBusca OR CAST(ID_CODIGO AS CHAR) LIKE $termoBusca)";
+        }
+
+        $colunasOrdenaveis = ['ID_CODIGO', 'DT_HORA_CADASTRO', 'NOME_CLIENTE', 'MARCA_EQUIPAMENTO', 'VALOR_TOTAL'];
+        $filtroOrderBy = 'ORDER BY ID_CODIGO DESC';
+
+        if (!empty($dadosRecebidos['ORDENACAO_LISTA'])) {
+            $itensOrdenacao = [];
+            foreach (explode(',', $dadosRecebidos['ORDENACAO_LISTA']) as $item) {
+                $partes = preg_split('/\s+/', trim($item));
+                $coluna = $partes[0] ?? '';
+                $direcao = strtoupper($partes[1] ?? 'ASC');
+                if (in_array($coluna, $colunasOrdenaveis, true) && in_array($direcao, ['ASC', 'DESC'], true)) {
+                    $itensOrdenacao[] = "$coluna $direcao";
+                }
+            }
+            if (!empty($itensOrdenacao)) {
+                $filtroOrderBy = 'ORDER BY ' . implode(', ', $itensOrdenacao) . ', ID_CODIGO DESC';
+            }
+        }
+
+        if (isset($dadosRecebidos['POR_PAGINA'])) {
+            $porPagina = (int) $dadosRecebidos['POR_PAGINA'];
+            $porPagina = in_array($porPagina, [10, 25, 50, 100], true) ? $porPagina : 10;
+            $pagina = max(1, (int) ($dadosRecebidos['PAGINA'] ?? 1));
+            $deslocamento = ($pagina - 1) * $porPagina;
+            $filtroLimite = "LIMIT $porPagina OFFSET $deslocamento";
+        }
+
+        $query = "SELECT ordem_servico.*
+                       , (SELECT COUNT(*)
+                            FROM ordem_servico
+                           WHERE 1 = 1
+                           $filtroBusca
+                           $filtroStatus
+                           $filtroOrdem) AS TOTAL_REGISTROS
+                    FROM ordem_servico
+                   WHERE 1 = 1
+                   $filtroBusca
+                   $filtroStatus
+                   $filtroOrdem
+                   $filtroOrderBy
+                   $filtroLimite";
+        $result = executarSQL($query);
+        return exibirRetorno($result, true, 'Ordens de serviço buscadas com sucesso.');
+    }
+
+    public function inserirOrdemServico(Request $request){
+        $dados = $this->validarDados($request);
+        $dataOrdemServico = $request->validate(['DATA_ORDEM_SERVICO' => 'required|date_format:Y-m-d\TH:i'])['DATA_ORDEM_SERVICO'];
+        $dados['DT_HORA_CADASTRO'] = str_replace('T', ' ', $dataOrdemServico) . ':00';
+        $colunas = array_keys($dados);
+        $valores = array_map(function ($valor) {
+            return DB::getPdo()->quote((string) $valor);
+        }, array_values($dados));
+
+        $query = 'INSERT INTO ordem_servico (' . implode(', ', $colunas) . ', STATUS)'
+               . ' VALUES (' . implode(', ', $valores) . ", 'A')";
+        $result = executarSQL($query);
+        return exibirRetorno($result, true, 'Ordem de serviço inserida com sucesso!');
+    }
+
+    public function alterarOrdemServico(Request $request){
+        $request->validate(['ID_CODIGO' => 'required|integer|min:1']);
+        $idCodigo = (int) $request->input('ID_CODIGO');
+        $dados = $this->validarDados($request);
+        $dataOrdemServico = $request->validate(['DATA_ORDEM_SERVICO' => 'required|date_format:Y-m-d\TH:i'])['DATA_ORDEM_SERVICO'];
+        $dados['DT_HORA_CADASTRO'] = str_replace('T', ' ', $dataOrdemServico) . ':00';
+        $campos = [];
+        foreach ($dados as $coluna => $valor) {
+            $campos[] = $coluna . ' = ' . DB::getPdo()->quote((string) $valor);
+        }
+        $query = 'UPDATE ordem_servico SET ' . implode(', ', $campos)
+               . " WHERE ID_CODIGO = $idCodigo AND STATUS = 'A'";
+        $result = executarSQL($query);
+        return exibirRetorno($result, true, 'Ordem de serviço alterada com sucesso!');
+    }
+
+    public function inativarOrdemServico(Request $request){
+        $request->validate(['ID_CODIGO' => 'required|integer|min:1']);
+        $idCodigo = (int) $request->input('ID_CODIGO');
+        $query = "UPDATE ordem_servico SET STATUS = 'I' WHERE ID_CODIGO = $idCodigo";
+        $result = executarSQL($query);
+        return exibirRetorno($result, true, 'Ordem de serviço excluída com sucesso!');
+    }
+
+    public function buscarClientes(Request $request){
+        $termo = trim((string) $request->input('FILTRO_BUSCA', ''));
+        if (mb_strlen($termo) < 2) {
+            return exibirRetorno([], true, 'Informe pelo menos dois caracteres.');
+        }
+        $filtro = DB::getPdo()->quote('%' . $termo . '%');
+        // Ajuste os nomes das colunas conforme a estrutura real da tabela clientes.
+        $query = "SELECT ID_CODIGO, NOME, RUA, NUMERO, BAIRRO, CIDADE, ESTADO, CEP, TELEFONE
+                    FROM clientes
+                   WHERE NOME LIKE $filtro
+                   ORDER BY NOME
+                   LIMIT 20";
+        $result = executarSQL($query);
+        return exibirRetorno($result, true, 'Clientes encontrados.');
+    }
+
+    public function buscarEquipamentos(Request $request){
+        $termo = trim((string) $request->input('FILTRO_BUSCA', ''));
+        if (mb_strlen($termo) < 2) {
+            return exibirRetorno([], true, 'Informe pelo menos dois caracteres.');
+        }
+        $filtro = DB::getPdo()->quote('%' . $termo . '%');
+        // Ajuste os nomes das colunas conforme a estrutura real da tabela equipamentos.
+        $query = "SELECT ID_CODIGO, MARCA, MODELO, TIPO
+                    FROM equipamentos
+                   WHERE MARCA LIKE $filtro OR MODELO LIKE $filtro OR TIPO LIKE $filtro
+                   ORDER BY MARCA, MODELO
+                   LIMIT 20";
+        $result = executarSQL($query);
+        return exibirRetorno($result, true, 'Equipamentos encontrados.');
+    }
+
+    private function validarDados(Request $request){
+        $dados = $request->validate([
+            'ID_CLIENTE' => 'nullable|integer|min:0',
+            'NOME_CLIENTE' => 'required|string|max:255',
+            'RUA_CLIENTE' => 'nullable|string|max:255',
+            'NUMERO_CLIENTE' => 'nullable|string|max:30',
+            'BAIRRO_CLIENTE' => 'nullable|string|max:150',
+            'CIDADE_CLIENTE' => 'nullable|string|max:150',
+            'ESTADO_CLIENTE' => 'nullable|string|max:2',
+            'CEP_CLIENTE' => 'nullable|string|max:10',
+            'TELEFONE_CLIENTE' => 'required|string|max:30',
+            'ID_EQUIPAMENTO' => 'nullable|integer|min:0',
+            'MARCA_EQUIPAMENTO' => 'nullable|string|max:150',
+            'MODELO_EQUIPAMENTO' => 'nullable|string|max:150',
+            'NUMERO_SERIE' => 'nullable|string|max:150',
+            'TIPO_EQUIPAMENTO' => 'nullable|string|max:150',
+            'DEFEITO' => 'nullable|string',
+            'LAUDO_TECNICO' => 'nullable|string',
+            'DESCRICAO_PECAS' => 'nullable|string',
+            'VALOR_PECAS' => 'nullable|numeric|min:0',
+            'DESCRICAO_SERVICOS' => 'nullable|string',
+            'VALOR_SERVICOS' => 'nullable|numeric|min:0',
+            'HOUVE_DESLOCAMENTO' => 'nullable|in:S,N',
+            'VALOR_DESLOCAMENTO' => 'nullable|numeric|min:0'
+        ]);
+
+        $campos = ['ID_CLIENTE', 'NOME_CLIENTE', 'RUA_CLIENTE', 'NUMERO_CLIENTE', 'BAIRRO_CLIENTE', 'CIDADE_CLIENTE', 'ESTADO_CLIENTE', 'CEP_CLIENTE', 'TELEFONE_CLIENTE', 'ID_EQUIPAMENTO', 'MARCA_EQUIPAMENTO', 'MODELO_EQUIPAMENTO', 'NUMERO_SERIE', 'TIPO_EQUIPAMENTO', 'DEFEITO', 'LAUDO_TECNICO', 'DESCRICAO_PECAS', 'VALOR_PECAS', 'DESCRICAO_SERVICOS', 'VALOR_SERVICOS', 'HOUVE_DESLOCAMENTO', 'VALOR_DESLOCAMENTO'];
+        $valores = [];
+        foreach ($campos as $campo) {
+            $valores[$campo] = $dados[$campo] ?? (in_array($campo, ['ID_CLIENTE', 'ID_EQUIPAMENTO', 'VALOR_PECAS', 'VALOR_SERVICOS', 'VALOR_DESLOCAMENTO']) ? 0 : '');
+        }
+        $valores['HOUVE_DESLOCAMENTO'] = ($dados['HOUVE_DESLOCAMENTO'] ?? 'N') === 'S' ? 'S' : 'N';
+        $valores['VALOR_PECAS'] = round((float) $valores['VALOR_PECAS'], 2);
+        $valores['VALOR_SERVICOS'] = round((float) $valores['VALOR_SERVICOS'], 2);
+        $valores['VALOR_DESLOCAMENTO'] = $valores['HOUVE_DESLOCAMENTO'] === 'S' ? round((float) $valores['VALOR_DESLOCAMENTO'], 2) : 0;
+        $valores['VALOR_TOTAL'] = round($valores['VALOR_PECAS'] + $valores['VALOR_SERVICOS'] + $valores['VALOR_DESLOCAMENTO'], 2);
+        return $valores;
+    }
+
+    public function imprimirOrdemServico(int $idCodigo){
+        if ($idCodigo <= 0) {
+            abort(404);
+        }
+
+        // Busca a OS salva, nunca utiliza campos recebidos pelo navegador.
+        $ordem = DB::table('ordem_servico')
+            ->where('ID_CODIGO', $idCodigo)
+            ->where('STATUS', 'A')
+            ->first();
+
+        if (!$ordem) {
+            abort(404, 'Ordem de serviço não encontrada.');
+        }
+
+        $numero = str_pad((string) $ordem->ID_CODIGO, 3, '0', STR_PAD_LEFT);
+        $partesEndereco = array_filter([
+            trim((string) ($ordem->RUA_CLIENTE ?? '')),
+            trim((string) ($ordem->NUMERO_CLIENTE ?? '')),
+            trim((string) ($ordem->BAIRRO_CLIENTE ?? '')),
+            trim((string) ($ordem->CIDADE_CLIENTE ?? '')),
+            trim((string) ($ordem->ESTADO_CLIENTE ?? '')),
+        ], fn ($valor) => $valor !== '');
+        $endereco = implode(', ', $partesEndereco);
+        $moeda = fn ($valor) => 'R$ ' . number_format((float) $valor, 2, ',', '.');
+
+        // Usa arquivo local; não depende de acesso HTTP para montar o PDF.
+        $imagem1 = public_path('images/begintech-modelo-pagina-1.png');
+        $imagem2 = public_path('images/begintech-modelo-pagina-2.png');
+        if (!is_file($imagem1) || !is_file($imagem2)) {
+            abort(500, 'Imagens do modelo de impressão não encontradas em public/images.');
+        }
+        $fundo1 = 'data:image/png;base64,' . base64_encode(file_get_contents($imagem1));
+        $fundo2 = 'data:image/png;base64,' . base64_encode(file_get_contents($imagem2));
+
+        return Loader::PDF('ordemservico::impresso', compact('ordem', 'numero', 'endereco', 'moeda', 'fundo1', 'fundo2'))
+            ->stream('Ordem-de-Servico-' . $numero . '.pdf');
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "name": "Clientes",
+    "alias": "clientes",
+    "description": "Cadastro e gerenciamento de clientes",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Clientes\\Providers\\ClientesServiceProvider"
+    ],
+    "files": []
+}

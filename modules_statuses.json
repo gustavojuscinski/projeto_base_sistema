@@ -6,5 +6,7 @@
     "RendaUber": true,
     "FormaPagamento": true,
     "Vendedores": true,
-    "Filiais": true
+    "Filiais": true,
+    "OrdemServico": true,
+    "Clientes": true
 }

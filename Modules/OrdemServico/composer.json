@@ -1,0 +1,10 @@
+{
+    "name": "local/ordem-servico",
+    "description": "Módulo de Ordem de Serviço",
+    "type": "laravel-module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\OrdemServico\\": ""
+        }
+    }
+}

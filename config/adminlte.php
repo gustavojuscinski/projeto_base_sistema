@@ -51,6 +51,11 @@ return [
                         'route' => 'vendedores.index',
                         'can' => 'WEB_MENU_CADASTRO_VENDEDOR',
                     ],
+                    [
+                        'label' => 'Clientes',
+                        'icon' => 'fa-solid fa-user-group',
+                        'route' => 'clientes.index',
+                    ],
                 ],
             ],
             [
@@ -63,6 +68,17 @@ return [
                         'icon' => 'fa-solid fa-credit-card',
                         'route' => 'forma-pagamentos.index',
                         'can' => 'WEB_MENU_FORMA_PAGAMENTO',
+                    ],
+                ],
+            ],
+            [
+                'label' => 'Ordem de Serviço',
+                'icon' => 'fa-solid fa-file-invoice',
+                'submenu' => [
+                    [
+                        'label' => 'Ordem de Serviço',
+                        'icon' => 'fa-solid fa-file-invoice',
+                        'route' => 'ordem-servico.index',
                     ],
                 ],
             ],

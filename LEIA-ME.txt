@@ -1,0 +1,20 @@
+IMPRESSO ORDEM DE SERVICO - BLADE HTML/CSS
+
+NOVO ARQUIVO:
+Modules/OrdemServico/resources/views/impressos/ordem_servico.blade.php
+
+LOGO:
+public/img/begintech-logo.png
+
+MUDANCA DO CONTROLLER:
+A versao completa esta incluida como REFERENCIA em REFERENCIA/OrdemServicoController.php.
+Se voce ja alterou outros metodos, NAO sobrescreva seu arquivo.
+Extraia o ZIP na raiz e rode APENAS: powershell -ExecutionPolicy Bypass -File .\APLICAR-CORRECAO.ps1
+O script faz backup e altera somente imprimirOrdemServico(), sem duplicar o metodo.
+Se preferir, copie manualmente somente imprimirOrdemServico() da versao de referencia.
+
+A rota existente /ordem-servico/{idCodigo}/impresso continua igual.
+A view anterior impressos/impresso.blade.php nao e utilizada.
+Loader::PDF() continua sendo utilizado.
+
+ATENCAO: O impresso reproduz a composicao fixa de duas paginas do exemplo. Textos muito longos podem ser limitados pelo espaco disponivel no modelo.
