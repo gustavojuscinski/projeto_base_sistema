@@ -29,7 +29,7 @@ class OrdemServicoController extends Controller
             $filtroBusca = "AND (NOME_CLIENTE LIKE $termoBusca OR TELEFONE_CLIENTE LIKE $termoBusca OR MARCA_EQUIPAMENTO LIKE $termoBusca OR MODELO_EQUIPAMENTO LIKE $termoBusca OR CAST(ID_CODIGO AS CHAR) LIKE $termoBusca)";
         }
 
-        $colunasOrdenaveis = ['ID_CODIGO', 'DT_HORA_CADASTRO', 'NOME_CLIENTE', 'MARCA_EQUIPAMENTO', 'VALOR_TOTAL'];
+        $colunasOrdenaveis = ['ID_CODIGO', 'DT_HORA_CADASTRO', 'NOME_CLIENTE', 'MARCA_EQUIPAMENTO', 'VALOR_TOTAL', 'SITUACAO'];
         $filtroOrderBy = 'ORDER BY ID_CODIGO DESC';
 
         if (!empty($dadosRecebidos['ORDENACAO_LISTA'])) {
@@ -62,6 +62,10 @@ class OrdemServicoController extends Controller
                            $filtroBusca
                            $filtroStatus
                            $filtroOrdem) AS TOTAL_REGISTROS
+                       , (SELECT forma_pagamento.DESCRICAO
+                            FROM forma_pagamento
+                           WHERE forma_pagamento.ID_CODIGO = ordem_servico.ID_FORMA_PAGAMENTO
+                           LIMIT 1) AS DESCRICAO_FORMA_PAGAMENTO
                     FROM ordem_servico
                    WHERE 1 = 1
                    $filtroBusca
@@ -99,7 +103,7 @@ class OrdemServicoController extends Controller
             $campos[] = $coluna . ' = ' . DB::getPdo()->quote((string) $valor);
         }
         $query = 'UPDATE ordem_servico SET ' . implode(', ', $campos)
-               . " WHERE ID_CODIGO = $idCodigo AND STATUS = 'A'";
+               . " WHERE ID_CODIGO = $idCodigo AND STATUS = 'A' AND SITUACAO = 'ABERTA'";
         $result = executarSQL($query);
         return exibirRetorno($result, true, 'Ordem de serviço alterada com sucesso!');
     }
@@ -188,10 +192,9 @@ class OrdemServicoController extends Controller
             abort(404);
         }
 
-        $ordem = DB::table('ordem_servico')
-            ->where('ID_CODIGO', $idCodigo)
-            ->where('STATUS', 'A')
-            ->first();
+        $query = "SELECT * FROM ordem_servico WHERE ID_CODIGO = $idCodigo AND STATUS = 'A' LIMIT 1";
+        $resultado = executarSQL($query);
+        $ordem = $resultado[0] ?? null;
 
         if (!$ordem) {
             abort(404, 'Ordem de serviço não encontrada.');
@@ -216,5 +219,84 @@ class OrdemServicoController extends Controller
 
         return Loader::PDF('ordemservico::impressos.ordem_servico', compact('ordem', 'numero', 'endereco', 'moeda', 'logo'))
             ->stream('Ordem-de-Servico-' . $numero . '.pdf');
+    }
+
+    public function finalizar(Request $request){
+        $dados = $request->validate([
+            'ID_CODIGO' => 'required|integer|min:1',
+            'DT_HORA_FINALIZACAO' => 'required|date_format:Y-m-d\TH:i',
+            'ID_FORMA_PAGAMENTO' => 'required|integer|min:1',
+            'VALOR_PAGO' => 'required|numeric|min:0'
+        ]);
+
+        $idUsuario = (int) (usuarioAutenticado()['ID_USUARIO'] ?? 0);
+        $idCodigo = (int) $dados['ID_CODIGO'];
+        $idFormaPagamento = (int) $dados['ID_FORMA_PAGAMENTO'];
+        $valorPago = round((float) $dados['VALOR_PAGO'], 2);
+        $dataFinalizacao = str_replace('T', ' ', $dados['DT_HORA_FINALIZACAO']) . ':00';
+
+        $query = "SELECT perfis.DESCRICAO
+                    FROM perfis
+                   WHERE perfis.ID_CODIGO = (SELECT usuarios.ID_PERFIL
+                                               FROM usuarios
+                                              WHERE usuarios.ID_USUARIO = $idUsuario
+                                              LIMIT 1)
+                   LIMIT 1";
+        $resultado = executarSQL($query);
+        $perfil = $resultado[0] ?? null;
+        $descricaoPerfil = is_array($perfil) ? ($perfil['DESCRICAO'] ?? '') : ($perfil->DESCRICAO ?? '');
+
+        if (mb_strtolower(trim((string) $descricaoPerfil), 'UTF-8') !== 'administrador') {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Acesso negado.'], 403);
+        }
+
+        $query = "SELECT ID_CODIGO, VALOR_TOTAL, SITUACAO
+                    FROM ordem_servico
+                   WHERE ID_CODIGO = $idCodigo
+                     AND STATUS = 'A'
+                   LIMIT 1";
+        $resultado = executarSQL($query);
+        $ordem = $resultado[0] ?? null;
+
+        if (!$ordem) {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Ordem de serviço não encontrada.'], 422);
+        }
+
+        $situacao = is_array($ordem) ? ($ordem['SITUACAO'] ?? '') : ($ordem->SITUACAO ?? '');
+        $valorTotal = round((float) (is_array($ordem) ? ($ordem['VALOR_TOTAL'] ?? 0) : ($ordem->VALOR_TOTAL ?? 0)), 2);
+
+        if ($situacao === 'FINALIZADA') {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Esta OS já está finalizada.'], 422);
+        }
+
+        if ($valorPago > $valorTotal || $valorTotal < 0) {
+            return response()->json(['sucesso' => false, 'mensagem' => 'O valor recebido não pode ultrapassar o total da OS.'], 422);
+        }
+
+        $query = "SELECT ID_CODIGO
+                    FROM forma_pagamento
+                   WHERE ID_CODIGO = $idFormaPagamento
+                     AND STATUS = 'A'
+                   LIMIT 1";
+        $resultado = executarSQL($query);
+
+        if (empty($resultado)) {
+            return response()->json(['sucesso' => false, 'mensagem' => 'Forma de pagamento inválida ou inativa.'], 422);
+        }
+
+        $dataFinalizacao = DB::getPdo()->quote($dataFinalizacao);
+        $valorPagoSql = number_format($valorPago, 2, '.', '');
+
+        $query = "UPDATE ordem_servico
+                     SET SITUACAO = 'FINALIZADA',
+                         DT_HORA_FINALIZACAO = $dataFinalizacao,
+                         ID_FORMA_PAGAMENTO = $idFormaPagamento,
+                         VALOR_PAGO = $valorPagoSql
+                   WHERE ID_CODIGO = $idCodigo
+                     AND STATUS = 'A'
+                     AND SITUACAO = 'ABERTA'
+                     AND VALOR_TOTAL >= $valorPagoSql";
+        $result = executarSQL($query);
+        return exibirRetorno($result, true, 'Ordem de serviço finalizada com sucesso!');
     }
 }

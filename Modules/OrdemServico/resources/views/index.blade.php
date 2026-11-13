@@ -52,7 +52,9 @@
                             <th class="ordenavel" data-coluna="NOME_CLIENTE" tabindex="0" aria-sort="none">Cliente</th>
                             <th class="ordenavel" data-coluna="MARCA_EQUIPAMENTO" tabindex="0" aria-sort="none">Equipamento</th>
                             <th class="ordenavel" data-coluna="VALOR_TOTAL" tabindex="0" aria-sort="none">Total</th>
-                            <th style="width: 110px;">Ações</th>
+                            <th class="ordenavel" data-coluna="SITUACAO" tabindex="0" aria-sort="none">Situação</th>
+                            <th>Pagamento</th>
+                            <th style="width: 135px;">Ações</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -85,9 +87,9 @@
                     <h5 class="modal-title" id="modalOrdemServicoLabel">Nova ordem de serviço</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-                <div class="modal-body py-2" style="max-height: calc(100dvh - 170px); overflow-y: auto;">
-                    <input type="hidden" id="inputIdOrdemServico">
-                    <ul class="nav nav-tabs mb-1" id="abasOrdemServico" role="tablist">
+                {{-- Abas fora da área rolável: permanecem fixas no topo do modal. --}}
+                <div class="px-3 pt-2 border-bottom">
+                    <ul class="nav nav-tabs mb-0" id="abasOrdemServico" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="abaDadosTab" data-bs-toggle="tab" data-bs-target="#abaDados" type="button" role="tab" aria-controls="abaDados" aria-selected="true">Dados da OS</button>
                         </li>
@@ -96,6 +98,9 @@
                         </li>
                     </ul>
 
+                </div>
+                <div class="modal-body py-2" style="max-height: calc(100dvh - 230px); overflow-y: auto;">
+                    <input type="hidden" id="inputIdOrdemServico">
                     <div class="tab-content" id="conteudoAbasOrdemServico">
                         <div class="tab-pane fade show active" id="abaDados" role="tabpanel" aria-labelledby="abaDadosTab">
                             <div class="row g-2 align-items-end mb-1">
@@ -231,6 +236,81 @@
         </div>
     </div>
     @endif
+
+    {{-- Modal de consulta: não compartilha formulário com inclusão/edição. --}}
+    <div class="modal fade" id="modalVisualizarOrdemServico" tabindex="-1" aria-labelledby="tituloVisualizarOrdemServico" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom py-3">
+                    <div>
+                        <div class="small text-secondary text-uppercase fw-semibold">Detalhes da ordem de serviço</div>
+                        <h5 class="modal-title fw-bold mb-0" id="tituloVisualizarOrdemServico">Ordem de Serviço</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body" id="conteudoVisualizarOrdemServico">
+                    <div class="text-center py-5 text-secondary">Carregando detalhes...</div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" id="btnImprimirVisualizacao"><i class="fa-solid fa-print me-1"></i>Imprimir</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal do badge de pagamento. --}}
+    <div class="modal fade" id="modalPagamentoOrdemServico" tabindex="-1" aria-labelledby="tituloPagamentoOrdemServico" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloPagamentoOrdemServico">Pagamento da OS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body" id="conteudoPagamentoOrdemServico"></div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div>
+            </div>
+        </div>
+    </div>
+
+    @if ($administrador)
+    <div class="modal fade" id="modalFinalizarOrdemServico" tabindex="-1" aria-labelledby="tituloFinalizarOrdemServico" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloFinalizarOrdemServico">Finalizar OS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="inputIdFinalizarOrdemServico">
+                    <div class="mb-3">
+                        <label class="form-label" for="inputDataFinalizacao">Data e hora de finalização</label>
+                        <input type="datetime-local" class="form-control" id="inputDataFinalizacao" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="selectFormaPagamentoOS">Forma de pagamento</label>
+                        <select class="form-select" id="selectFormaPagamentoOS" required>
+                            <option value="">Selecione uma forma de pagamento...</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label" for="inputValorPagoOS">Valor recebido (R$)</label>
+                        <input type="text" class="form-control" id="inputValorPagoOS" inputmode="decimal" value="0,00" required>
+                        <div class="form-text">Para pagamento parcial, informe o valor efetivamente recebido. Para pendente, informe 0,00.</div>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-3 mt-3">
+                        <span class="text-secondary">Total da OS</span>
+                        <strong id="textoTotalFinalizacaoOS">R$ 0,00</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnConfirmarFinalizacaoOS"><i class="fa-solid fa-check me-1"></i>Finalizar OS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -320,65 +400,210 @@
             });
         }
 
+        const dadosOSPagina = new Map();
+        let totalOSFinalizacao = 0;
+        const dinheiroOS = valor => Number(valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        const seguroOS = valor => $('<div>').text(valor ?? '').html();
+        const dataOS = valor => valor ? seguroOS(aplicarMascaraData(valor)) : '-';
+
+        function situacaoPagamentoOS(ordem){
+            const total = Math.max(0, Number(ordem.VALOR_TOTAL) || 0);
+            const pago = Math.max(0, Number(ordem.VALOR_PAGO) || 0);
+            if (total > 0 && pago >= total - 0.005) return {rotulo:'Pago', cor:'text-bg-success'};
+            if (pago > 0) return {rotulo:'Parcial', cor:'text-bg-warning'};
+            return {rotulo:'Pendente', cor:'text-bg-danger'};
+        }
+
         function popularTabelaDados(dados){
             let linhas = '';
             let cards = '';
+            dadosOSPagina.clear();
             if (!dados.length) {
-                linhas = '<tr><td colspan="6" class="text-center">Nenhuma ordem de serviço encontrada.</td></tr>';
+                linhas = '<tr><td colspan="8" class="text-center">Nenhuma ordem de serviço encontrada.</td></tr>';
                 cards = '<div class="text-center text-secondary py-4">Nenhuma ordem de serviço encontrada.</div>';
             } else {
                 dados.forEach(function(ordem){
                     const id = Number(ordem.ID_CODIGO);
-                    const nome = $('<div>').text(ordem.NOME_CLIENTE ?? '').html();
-                    const equipamento = $('<div>').text([ordem.MARCA_EQUIPAMENTO, ordem.MODELO_EQUIPAMENTO].filter(Boolean).join(' - ')).html();
-                    const data = $('<div>').text(ordem.DT_HORA_CADASTRO ? aplicarMascaraData(ordem.DT_HORA_CADASTRO) : '').html();
-                    const total = Number(ordem.VALOR_TOTAL || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    let htmlBotoes = '';
-                    if (usuarioEhAdministradorOS) {
-                        htmlBotoes = `<div class="acoes-linha">
-                            <button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar" onclick="editarCadastro(${id})"><i class="fa-solid fa-edit"></i></button>
-                            <div class="dropdown">
-                                <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle" title="Mais ações" aria-label="Mais ações" aria-expanded="false" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><button type="button" class="dropdown-item" onclick="imprimirOrdemServico(${id})"><i class="fa-solid fa-print"></i><span> Impresso</span></button></li>
-                                    <li><button type="button" class="dropdown-item acao-perigo" onclick="excluirCadastro(${id})"><i class="fa-solid fa-trash"></i><span> Excluir</span></button></li>
-                                </ul>
-                            </div>
-                        </div>`;
-                    } else {
-                        htmlBotoes = `<div class="acoes-linha">
-                            <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1" title="Impresso" aria-label="Imprimir ordem de serviço" onclick="imprimirOrdemServico(${id})"><i class="fa-solid fa-print"></i></button>
-                        </div>`;
+                    dadosOSPagina.set(id, ordem);
+                    const nome = seguroOS(ordem.NOME_CLIENTE);
+                    const equipamento = seguroOS([ordem.MARCA_EQUIPAMENTO, ordem.MODELO_EQUIPAMENTO].filter(Boolean).join(' - '));
+                    const data = dataOS(ordem.DT_HORA_CADASTRO);
+                    const total = dinheiroOS(ordem.VALOR_TOTAL);
+                    const finalizada = String(ordem.SITUACAO || 'ABERTA').toUpperCase() === 'FINALIZADA';
+                    const situacao = finalizada ? '<span class="badge text-bg-success py-2 px-2">Finalizada</span>' : '<span class="badge text-bg-primary py-2 px-2">Aberta</span>';
+                    const pagamento = situacaoPagamentoOS(ordem);
+                    const badgePagamento = `<button type="button" class="badge ${pagamento.cor} border-0 py-2 px-2" title="Visualizar pagamento" aria-label="Visualizar pagamento da OS ${id}" onclick="visualizarPagamentoOS(${id})">${pagamento.rotulo}</button>`;
+
+                    // Regra direta: OS finalizada nunca mostra Editar nem Finalizar.
+                    let htmlBotoes = `<div class="acoes-linha">`;
+                    if (usuarioEhAdministradorOS && !finalizada) {
+                        htmlBotoes += `<button type="button" class="btn btn-primary m-0 py-0 px-1" title="Editar" aria-label="Editar OS ${id}" onclick="editarCadastro(${id})"><i class="fa-solid fa-edit"></i></button>`;
                     }
+                    htmlBotoes += `<div class="dropdown">
+                        <button type="button" class="btn btn-outline-secondary m-0 py-0 px-1 dropdown-toggle" title="Mais ações" aria-label="Mais ações" aria-expanded="false" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button type="button" class="dropdown-item" onclick="visualizarOrdemServico(${id})"><i class="fa-solid fa-eye me-2"></i>Visualizar</button></li>
+                            <li><button type="button" class="dropdown-item" onclick="imprimirOrdemServico(${id})"><i class="fa-solid fa-print me-2"></i>Impresso</button></li>`;
+                    if (usuarioEhAdministradorOS && !finalizada) {
+                        htmlBotoes += `<li><button type="button" class="dropdown-item" onclick="abrirFinalizacaoOS(${id})"><i class="fa-solid fa-circle-check me-2"></i>Finalizar OS</button></li>`;
+                        htmlBotoes += `<li><button type="button" class="dropdown-item acao-perigo" onclick="excluirCadastro(${id})"><i class="fa-solid fa-trash me-2"></i>Excluir</button></li>`;
+                    }
+                    htmlBotoes += '</ul></div></div>';
+
                     linhas += `<tr>
-                        <td>${id}</td>
-                        <td>${data}</td>
-                        <td>${nome}</td>
-                        <td>${equipamento}</td>
-                        <td>${total}</td>
-                        <td>${htmlBotoes}</td>
+                        <td>${id}</td><td>${data}</td><td>${nome}</td><td>${equipamento}</td><td>${total}</td>
+                        <td>${situacao}</td><td>${badgePagamento}</td><td>${htmlBotoes}</td>
                     </tr>`;
-                    cards += `<div class="card mb-2 shadow-sm">
-                        <div class="card-body p-3">
-                            <div class="d-flex justify-content-between align-items-start gap-2 border-bottom pb-2 mb-2">
-                                <div class="min-w-0">
-                                    <div class="fw-semibold text-break">${nome || 'Cliente não informado'}</div>
-                                    <small class="text-secondary">OS #${id}</small>
-                                </div>
-                                ${htmlBotoes}
-                            </div>
-                            <div class="row g-2 small">
-                                <div class="col-12"><div class="text-secondary">Data</div><div>${data || '-'}</div></div>
-                                <div class="col-12"><div class="text-secondary">Equipamento</div><div class="text-break">${equipamento || '-'}</div></div>
-                                <div class="col-12"><div class="text-secondary">Total</div><div class="fw-semibold text-success">${total}</div></div>
-                            </div>
+                    cards += `<div class="card mb-2 shadow-sm"><div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start gap-2 border-bottom pb-2 mb-2">
+                            <div class="min-w-0"><div class="fw-semibold text-break">${nome || 'Cliente não informado'}</div><small class="text-secondary">OS #${id}</small></div>
+                            ${htmlBotoes}
                         </div>
-                    </div>`;
+                        <div class="d-flex flex-wrap gap-2 mb-3">${situacao}${badgePagamento}</div>
+                        <div class="row g-2 small">
+                            <div class="col-6"><div class="text-secondary">Data</div><div>${data}</div></div>
+                            <div class="col-6"><div class="text-secondary">Total</div><div class="fw-semibold">${total}</div></div>
+                            <div class="col-12"><div class="text-secondary">Equipamento</div><div class="text-break">${equipamento || '-'}</div></div>
+                        </div>
+                    </div></div>`;
                 });
             }
             $('#tabelaOrdensServico tbody').html(linhas);
             $('#cardsOrdensServicoMobile').html(cards);
         }
+
+        function obterOrdemServico(idCodigo, aoCarregar){
+            requisicaoAjax({
+                type:'POST', dataType:'json',
+                url:"{{ route('ordem-servico.buscar') }}",
+                data:{'_token':'{{ csrf_token() }}','ID_CODIGO':idCodigo},
+                success:function(r){
+                    const ordem = (r.dados || []).find(item => Number(item.ID_CODIGO) === Number(idCodigo));
+                    if (!ordem) { informarAviso('Ordem de serviço não encontrada.'); return; }
+                    aoCarregar(ordem);
+                },
+                error:function(err){ console.error('Erro ao carregar OS:',err); informarAviso('Não foi possível carregar a ordem de serviço.'); }
+            });
+        }
+
+        function visualizarPagamentoOS(idCodigo){
+            obterOrdemServico(idCodigo, function(ordem){
+                const pg = situacaoPagamentoOS(ordem);
+                const forma = ordem.DESCRICAO_FORMA_PAGAMENTO || 'Não informada';
+                const pago = Math.max(0, Number(ordem.VALOR_PAGO) || 0);
+                const total = Math.max(0, Number(ordem.VALOR_TOTAL) || 0);
+                $('#tituloPagamentoOrdemServico').text('Pagamento da OS #' + idCodigo);
+                $('#conteudoPagamentoOrdemServico').html(`
+                    <div class="text-center pb-3"><span class="badge ${pg.cor} fs-6">${pg.rotulo}</span></div>
+                    <div class="border rounded p-3 mb-3"><div class="text-secondary small mb-1">Forma de pagamento</div><div class="fw-semibold fs-5">${seguroOS(forma)}</div></div>
+                    <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-secondary">Total da OS</span><strong>${dinheiroOS(total)}</strong></div>
+                    <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-secondary">Recebido</span><strong class="text-success">${dinheiroOS(pago)}</strong></div>
+                    <div class="d-flex justify-content-between py-2"><span class="text-secondary">Saldo pendente</span><strong>${dinheiroOS(Math.max(0,total-pago))}</strong></div>`);
+                $('#modalPagamentoOrdemServico').modal('show');
+            });
+        }
+
+        function visualizarOrdemServico(idCodigo){
+            obterOrdemServico(idCodigo, function(o){
+                const campo = (titulo,valor,classe='col-12 col-md-6') => `<div class="${classe}"><div class="text-secondary small mb-1">${titulo}</div><div class="fw-medium text-break" style="white-space:pre-wrap">${seguroOS(valor || '-')}</div></div>`;
+                const endereco = [o.RUA_CLIENTE, o.NUMERO_CLIENTE, o.BAIRRO_CLIENTE, o.CIDADE_CLIENTE, o.ESTADO_CLIENTE, o.CEP_CLIENTE].filter(Boolean).join(', ');
+                const equipamento = [o.MARCA_EQUIPAMENTO,o.MODELO_EQUIPAMENTO,o.TIPO_EQUIPAMENTO].filter(Boolean).join(' · ');
+                const pg = situacaoPagamentoOS(o);
+                const finalizada = String(o.SITUACAO || 'ABERTA').toUpperCase() === 'FINALIZADA';
+                $('#tituloVisualizarOrdemServico').text('OS #' + idCodigo);
+                $('#conteudoVisualizarOrdemServico').html(`
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+                        <span class="badge ${finalizada ? 'text-bg-success' : 'text-bg-primary'}">${finalizada ? 'Finalizada' : 'Aberta'}</span>
+                        <span class="badge ${pg.cor}">${pg.rotulo}</span>
+                        <span class="text-secondary small ms-md-auto"><i class="fa-regular fa-calendar me-1"></i>${dataOS(o.DT_HORA_CADASTRO)}</span>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6"><div class="border rounded-3 p-3 h-100">
+                            <div class="fw-semibold border-bottom pb-2 mb-3"><i class="fa-solid fa-user text-primary me-2"></i>Cliente</div>
+                            <div class="row g-3">${campo('Nome',o.NOME_CLIENTE,'col-12')}${campo('Telefone',o.TELEFONE_CLIENTE)}${campo('Endereço',endereco,'col-12')}</div>
+                        </div></div>
+                        <div class="col-12 col-md-6"><div class="border rounded-3 p-3 h-100">
+                            <div class="fw-semibold border-bottom pb-2 mb-3"><i class="fa-solid fa-screwdriver-wrench text-primary me-2"></i>Equipamento</div>
+                            <div class="row g-3">${campo('Marca / Modelo / Tipo',equipamento,'col-12')}${campo('Número de série',o.NUMERO_SERIE,'col-12')}</div>
+                        </div></div>
+                        <div class="col-12"><div class="border rounded-3 p-3">
+                            <div class="fw-semibold border-bottom pb-2 mb-3"><i class="fa-solid fa-clipboard-check text-primary me-2"></i>Serviço e diagnóstico</div>
+                            <div class="row g-3">${campo('Defeito informado',o.DEFEITO)}${campo('Laudo técnico',o.LAUDO_TECNICO)}${campo('Peças utilizadas',o.DESCRICAO_PECAS)}${campo('Serviços realizados',o.DESCRICAO_SERVICOS)}</div>
+                        </div></div>
+                        <div class="col-12"><div class="border rounded-3 p-3">
+                            <div class="fw-semibold border-bottom pb-2 mb-3"><i class="fa-solid fa-receipt text-primary me-2"></i>Valores e encerramento</div>
+                            <div class="row g-3">
+                                ${campo('Peças',dinheiroOS(o.VALOR_PECAS),'col-6 col-lg-3')}
+                                ${campo('Serviços',dinheiroOS(o.VALOR_SERVICOS),'col-6 col-lg-3')}
+                                ${campo('Deslocamento',dinheiroOS(o.VALOR_DESLOCAMENTO),'col-6 col-lg-3')}
+                                ${campo('Total',dinheiroOS(o.VALOR_TOTAL),'col-6 col-lg-3')}
+                                ${campo('Forma de pagamento',o.DESCRICAO_FORMA_PAGAMENTO)}
+                                ${campo('Valor recebido',dinheiroOS(o.VALOR_PAGO))}
+                                ${campo('Finalização',o.DT_HORA_FINALIZACAO ? dataOS(o.DT_HORA_FINALIZACAO) : 'Não finalizada','col-12')}
+                            </div>
+                        </div></div>
+                    </div>`);
+                $('#btnImprimirVisualizacao').off('click').on('click', function(){ imprimirOrdemServico(idCodigo); });
+                $('#modalVisualizarOrdemServico').modal('show');
+            });
+        }
+
+        function abrirFinalizacaoOS(idCodigo){
+            if (!usuarioEhAdministradorOS) return;
+            obterOrdemServico(idCodigo, function(ordem){
+                if (String(ordem.SITUACAO || 'ABERTA').toUpperCase() === 'FINALIZADA') {
+                    informarAviso('Esta ordem de serviço já foi finalizada.'); return;
+                }
+                totalOSFinalizacao = Math.max(0, Number(ordem.VALOR_TOTAL) || 0);
+                $('#inputIdFinalizarOrdemServico').val(idCodigo);
+                $('#tituloFinalizarOrdemServico').text('Finalizar OS #' + idCodigo);
+                const agora = new Date();
+                $('#inputDataFinalizacao').val(new Date(agora.getTime() - agora.getTimezoneOffset() * 60000).toISOString().slice(0,16));
+                $('#inputValorPagoOS').val(formatarValor(totalOSFinalizacao));
+                $('#textoTotalFinalizacaoOS').text(dinheiroOS(totalOSFinalizacao));
+                $('#selectFormaPagamentoOS').html('<option value="">Carregando formas de pagamento...</option>');
+                $('#btnConfirmarFinalizacaoOS').prop('disabled',true);
+                $('#modalFinalizarOrdemServico').modal('show');
+                requisicaoAjax({type:'POST',dataType:'json',url:"{{ route('forma-pagamentos.buscar') }}",
+                    data:{'_token':'{{ csrf_token() }}','FILTRO_BUSCA':'','INATIVOS':0,'PAGINA':1,'POR_PAGINA':100},
+                    success:function(r){
+                        const formas = r.dados || [];
+                        let opcoes = '<option value="">Selecione uma forma de pagamento...</option>';
+                        formas.forEach(function(f){ opcoes += `<option value="${Number(f.ID_CODIGO)}">${seguroOS(f.DESCRICAO)}</option>`; });
+                        $('#selectFormaPagamentoOS').html(opcoes);
+                        $('#btnConfirmarFinalizacaoOS').prop('disabled',false);
+                    },error:function(){
+                        $('#selectFormaPagamentoOS').html('<option value="">Não foi possível carregar as formas</option>');
+                        informarAviso('Não foi possível carregar as formas de pagamento.');
+                    }
+                });
+            });
+        }
+
+        $('#inputValorPagoOS').on('input', function(){
+            const digitos = $(this).val().replace(/\D/g,'').slice(0,15);
+            $(this).val(formatarValor(Number(digitos || 0)/100));
+        });
+        $('#btnConfirmarFinalizacaoOS').on('click', function(){
+            if (!usuarioEhAdministradorOS) return;
+            const id = Number($('#inputIdFinalizarOrdemServico').val());
+            const valor = valorNumerico('inputValorPagoOS');
+            const forma = Number($('#selectFormaPagamentoOS').val()) || 0;
+            const data = $('#inputDataFinalizacao').val();
+            if (!data || !forma || valor < 0 || valor > totalOSFinalizacao + 0.005) {
+                informarAviso('Informe data, forma de pagamento e valor recebido válido (até o total da OS).'); return;
+            }
+            const botao = $(this).prop('disabled',true);
+            exibirLoading('S');
+            requisicaoAjax({type:'POST',dataType:'json',url:"{{ route('ordem-servico.finalizar') }}",
+                data:{'_token':'{{ csrf_token() }}','ID_CODIGO':id,'DT_HORA_FINALIZACAO':data,'ID_FORMA_PAGAMENTO':forma,'VALOR_PAGO':valor},
+                success:function(r){
+                    botao.prop('disabled',false); exibirLoading('N');
+                    if (r.sucesso === false || r.success === false) {informarAviso(r.mensagem || 'Não foi possível finalizar.');return;}
+                    $('#modalFinalizarOrdemServico').modal('hide');buscarDados();informarSucesso(r.mensagem || 'OS finalizada com sucesso!');
+                },error:function(err){botao.prop('disabled',false);exibirLoading('N');informarAviso(err.responseJSON?.message || 'Erro ao finalizar OS.');}
+            });
+        });
 
         function imprimirOrdemServico(idCodigo){
             const url = @json(route('ordem-servico.imprimir', ['idCodigo' => '__ID__'])).replace('__ID__', encodeURIComponent(idCodigo));
@@ -510,6 +735,10 @@
                     exibirLoading('N');
                     if (!ordem) {
                         informarAviso('Ordem de serviço não encontrada.');
+                        return;
+                    }
+                    if (String(ordem.SITUACAO || 'ABERTA').toUpperCase() === 'FINALIZADA') {
+                        informarAviso('Ordem finalizada não pode ser editada.');
                         return;
                     }
                     limparCamposModal();

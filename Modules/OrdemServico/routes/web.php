@@ -13,4 +13,5 @@ Route::middleware(VerificarAutenticacao::class)->group(function () {
     Route::post('/buscar/clientes/ordem-servico', [OrdemServicoController::class, 'buscarClientes'])->name('ordem-servico.clientes.buscar');
     Route::post('/buscar/equipamentos/ordem-servico', [OrdemServicoController::class, 'buscarEquipamentos'])->name('ordem-servico.equipamentos.buscar');
     Route::get('/ordem-servico/{idCodigo}/impresso', [OrdemServicoController::class, 'imprimirOrdemServico'])->whereNumber('idCodigo')->name('ordem-servico.imprimir');
+    Route::post('/ordem-servico/finalizar', [OrdemServicoController::class, 'finalizar'])->name('ordem-servico.finalizar');
 });
